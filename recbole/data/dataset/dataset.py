@@ -13,12 +13,13 @@ recbole.data.dataset
 """
 
 import copy
+import logging
 import pickle
 import os
 import yaml
 from collections import Counter, defaultdict
 from logging import getLogger
-
+import math
 import numpy as np
 import pandas as pd
 import torch
@@ -112,7 +113,6 @@ class Dataset(torch.utils.data.Dataset):
         Initialize attributes firstly, then load data from atomic files, pre-process the dataset lastly.
         """
         self.logger.debug(set_color(f"Loading {self.__class__} from scratch.", "green"))
-
         self._get_preset()
         self._get_field_from_config()
         self._load_data(self.dataset_name, self.dataset_path)
@@ -122,7 +122,6 @@ class Dataset(torch.utils.data.Dataset):
     def _get_preset(self):
         """Initialization useful inside attributes."""
         self.dataset_path = self.config["data_path"]
-
         self.field2type = {}
         self.field2source = {}
         self.field2id_token = {}
@@ -160,6 +159,10 @@ class Dataset(torch.utils.data.Dataset):
         self.feat_name_list = self._build_feat_name_list()
         if self.benchmark_filename_list is None:
             self._data_filtering()
+        #划分popular的item
+        self._divide_popular()
+        # 先添加交互次数，再归一化
+        self._add_feature_by_interaction()
 
         self._remap_ID_all()
         self._user_item_feat_preparation()
@@ -169,6 +172,152 @@ class Dataset(torch.utils.data.Dataset):
         self._discretization()
         self._preload_weight_matrix()
 
+        # 属性分桶
+        self._divide_bucket(FeatureSource.INTERACTION)
+        self._divide_bucket(FeatureSource.USER)
+        self._divide_bucket(FeatureSource.ITEM)
+
+        self._add_interaction_level()
+        self._divid_interaction_dataset()
+
+        # 把用户的属性合并过来
+        self.feature_df = pd.merge(self.feature_df, self.user_feat, on=self.uid_field)
+    def _divid_interaction_dataset(self):
+        '''
+            按照交互频率， 拆分交互数据集为流行商品和不流行的商品， 并且根据用户ID把这两部分数据join起来
+        '''
+        self.inter_feat_popular = self.inter_feat[self.inter_feat["popular"] == 1]
+        self.inter_feat_unpopular = self.inter_feat[self.inter_feat["popular"] == 0]
+
+        self.feature_df = self.inter_feat_popular.join(self.inter_feat_unpopular.set_index(self.uid_field), on=self.uid_field, how="inner", lsuffix="_popular",
+                                          rsuffix="_unpopular")
+
+        # 移除拆分后的popular字段
+        self._del_col(self.feature_df, "popular_popular")
+        self._del_col(self.feature_df, "popular_unpopular")
+        self.feature_df = self.feature_df.reset_index(drop=True)
+
+
+    def _add_feature_by_interaction(self):
+        item_inter_num = Counter(self.inter_feat[self.iid_field].values)
+        num_col_name = 'interacion_num_log'
+
+        self._add_interaction_info(item_inter_num, num_col_name)
+
+        if self.config["interaction_level_user_field"] is None:
+            return
+        field_list = list(self.config["interaction_level_user_field"])
+
+        for field in field_list:
+            distinct_info = set(self.user_feat[field])
+            for value in distinct_info:
+                # 筛选出符合条件的用户
+                users = self.user_feat[self.user_feat[field] == value]
+                users = users[self.uid_field]
+                # 在交互数据集中保留这些用户，得到新的交互数据集
+                inter_df = self.inter_feat[self.inter_feat[self.uid_field].isin(users)]
+
+                # 将这些交互数据生成新的交互结果
+                item_inter_num = Counter(inter_df[self.iid_field].values)
+                num_col_name = f'{field}_{value}_interacion_num_log'
+
+                self._add_interaction_info(item_inter_num, num_col_name)
+    def _add_interaction_level(self):
+        ''' compute the level between 0-n'''
+        level = 5
+        if self.config["interaction_level"] is not None:
+            level = self.config["interaction_level"]
+
+        factor = 1 / level
+
+        for column in self.inter_feat.columns.values:
+            if not str(column).endswith("interacion_num_log"):
+                continue
+
+            level_col_name = str(column).replace("log","level")
+
+            self.set_field_property(
+                level_col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+            )
+
+            inter_fre_level_list = []
+            for item in self.inter_feat[column]:
+                level = int(item / factor)
+                if item != 0 and item != 1 and item % factor != 0:
+                    level += 1
+                inter_fre_level_list.append(level)
+
+            self.inter_feat[level_col_name] = inter_fre_level_list
+            # 移除原始算出来交互次数对数的列
+            self._del_col(self.inter_feat, column)
+
+
+    def _add_interaction_info(self, item_inter_num, num_col_name):
+        ''' add user item interaction count and get log result'''
+        ''' add interaction level on inter dataset'''
+        self.set_field_property(
+            num_col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+        )
+
+        inter_fre_list = []
+        for item in self.inter_feat[self.iid_field]:
+            if item_inter_num[item] == 0:
+                inter_fre_list.append(0)
+            else:
+                inter_fre_list.append(math.log(item_inter_num[item]))
+
+        self.inter_feat[num_col_name] = inter_fre_list
+    def _divide_bucket(self, source):
+        if self.config["divide_bucket"] is None:
+            divide_bucket = None
+        elif source.value not in self.config["divide_bucket"]:
+            divide_bucket = None
+        elif self.config["divide_bucket"][source.value] == "*":
+            divide_bucket = None
+        else:
+            divide_bucket = dict(self.config["divide_bucket"][source.value])
+
+        if divide_bucket is None:
+            return
+
+        self.logger.debug(f"divide bucket config is {divide_bucket}.")
+
+        for field, value in divide_bucket.items():
+            col_name = f"{field}_level"
+            self.set_field_property(
+                col_name, FeatureType.FLOAT, source, 1
+            )
+
+            if source == FeatureSource.INTERACTION:
+                max_val = max(self.inter_feat[field])
+                min_val = min(self.inter_feat[field])
+                factor = (int(max_val) - int(min_val)) / value;
+
+                if field in self.inter_feat:
+                    self.inter_feat[col_name] = (
+                            self.inter_feat[field] / factor
+                    ).astype(int)
+            elif source == FeatureSource.USER:
+                max_val = max(self.user_feat[field])
+                min_val = min(self.user_feat[field])
+                factor = (int(max_val) - int(min_val)) / value;
+
+                if field in self.user_feat:
+                    self.user_feat[col_name] = (
+                            self.user_feat[field].astype(int) / factor
+                    ).astype(int)
+            elif source == FeatureSource.ITEM:
+                max_val = max(self.item_feat[field])
+                min_val = min(self.item_feat[field])
+                factor = (int(max_val) - int(min_val)) / value;
+
+                if field in self.item_feat:
+                    self.item_feat[col_name] = (
+                            self.item_feat[field] / factor
+                    ).astype(int)
+
+            else:
+                raise ValueError(f"Field [{field}] not in [{source.value}].")
     def _data_filtering(self):
         """Data filtering
 
@@ -217,7 +366,6 @@ class Dataset(torch.utils.data.Dataset):
             os.path.join(current_path, f"../../properties/dataset/{url_file}.yaml")
         ) as f:
             dataset2url = yaml.load(f.read(), Loader=self.config.yaml_loader)
-
         if self.dataset_name in dataset2url:
             url = dataset2url[self.dataset_name]
             return url
@@ -249,8 +397,8 @@ class Dataset(torch.utils.data.Dataset):
             else:
                 self.logger.info("Stop download.")
                 exit(-1)
-            torch.distributed.barrier()
-        else:
+
+        if torch.distributed.is_initialized():
             torch.distributed.barrier()
 
     def _load_data(self, token, dataset_path):
@@ -263,6 +411,7 @@ class Dataset(torch.utils.data.Dataset):
             token (str): dataset name.
             dataset_path (str): path of dataset dir.
         """
+
         if not os.path.exists(dataset_path):
             self._download()
         self._load_inter_feat(token, dataset_path)
@@ -856,6 +1005,52 @@ class Dataset(torch.utils.data.Dataset):
             subset=[self.uid_field, self.iid_field], keep=keep, inplace=True
         )
 
+    def _divide_popular(self):
+        fre_counter = Counter(self.inter_feat[self.iid_field].values)
+        self.logger.info(
+            set_color("item交互频率中位数: ", "pink") + f"[{np.median(list(fre_counter.values()))}]"
+        )
+        self.logger.info(
+            set_color("item交互频率上4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.25)}]"
+        )
+        self.logger.info(
+            set_color("item交互频率下4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
+        )
+        self.logger.info(
+            set_color("item交互频率平均数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
+        )
+        col_name = "popular"
+        self.set_field_property(
+            col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+        )
+
+        popular_threshold = 100
+
+        fre_val = list(fre_counter.values())
+        fre_val.sort()
+        threshold_num = sum(fre_val) // 2
+        cur = 0
+        for i in fre_val:
+            cur += i
+            if cur > threshold_num:
+                popular_threshold = i
+                break
+
+        popular = []
+        for item in self.inter_feat[self.iid_field]:
+            if fre_counter[item] > popular_threshold:
+                popular.append(1)
+            else:
+                popular.append(0)
+        self.inter_feat[col_name] = popular
+
+        self.logger.info(
+            set_color("item 流行和长尾数据划分阀值: ", "pink") + f"[{popular_threshold}]"
+        )
+
+        self.logger.info(
+            set_color("item 流行和长尾数据划分比例: ", "pink") + f"[{str(Counter(popular))}]"
+        )
     def _filter_by_inter_num(self):
         """Filter by number of interaction.
 
