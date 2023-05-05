@@ -250,6 +250,10 @@ class FullSortEvalDataLoader(AbstractDataLoader):
     def collate_fn(self, index):
         index = np.array(index)
         if not self.is_sequential:
+            index = np.array(index)
+            data = self._dataset[index]
+            transformed_data = self.transform(self._dataset, data)
+
             user_df = self.user_df[index]
             uid_list = list(user_df[self.uid_field])
 
@@ -269,7 +273,7 @@ class FullSortEvalDataLoader(AbstractDataLoader):
             )
             positive_i = torch.cat(list(positive_item))
 
-            return user_df, (history_u, history_i), positive_u, positive_i
+            return transformed_data, (history_u, history_i), positive_u, positive_i
         else:
             interaction = self._dataset[index]
             transformed_interaction = self.transform(self._dataset, interaction)

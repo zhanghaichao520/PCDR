@@ -172,32 +172,81 @@ class Dataset(torch.utils.data.Dataset):
         self._discretization()
         self._preload_weight_matrix()
 
+        # 添加用户属性： 流行交互商品和不流行交互商品， 需要等set label后再做， 因为只需要添加正例
+        self._user_dataset_add_interaction_item(max_item_num=5)
+
         # 属性分桶
         self._divide_bucket(FeatureSource.INTERACTION)
         self._divide_bucket(FeatureSource.USER)
         self._divide_bucket(FeatureSource.ITEM)
 
         self._add_interaction_level()
-        self._divid_interaction_dataset()
 
+        # self._merge_user_field_to_dataset()
+
+
+    def _merge_user_field_to_dataset(self):
+        # 先把UID塞到最后一列
+        uid_list = self.inter_feat[self.uid_field]
+        self._del_col(self.inter_feat, self.uid_field)
+        self.set_field_property(
+            self.uid_field, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+        )
+        self.inter_feat[self.uid_field] = uid_list
         # 把用户的属性合并过来
-        self.feature_df = pd.merge(self.feature_df, self.user_feat, on=self.uid_field)
-    def _divid_interaction_dataset(self):
+        self.inter_feat = pd.merge(self.inter_feat, self.user_feat, on=self.uid_field)
+
+    def _user_dataset_add_interaction_item(self, max_item_num = 5):
         '''
-            按照交互频率， 拆分交互数据集为流行商品和不流行的商品， 并且根据用户ID把这两部分数据join起来
+            按照交互频率， 拆分交互数据集为流行商品和不流行的商品， 并且添加为用户属性
         '''
-        self.inter_feat_popular = self.inter_feat[self.inter_feat["popular"] == 1]
-        self.inter_feat_unpopular = self.inter_feat[self.inter_feat["popular"] == 0]
 
-        self.feature_df = self.inter_feat_popular.join(self.inter_feat_unpopular.set_index(self.uid_field), on=self.uid_field, how="inner", lsuffix="_popular",
-                                          rsuffix="_unpopular")
+        # 取交互数据的一部分
+        part_num = int(len(self.inter_feat) * 0.7)
+        part_of_inter_feat = self.inter_feat.head(part_num)
+        # 用户与流行度较高商品显式的交互，
+        pop_inter_f = part_of_inter_feat[(part_of_inter_feat[self.label_field] == 1) & (part_of_inter_feat[self.popular_col_name] == 1)]
+        # 用户与流行度较低商品显式的交互， 取交互数据的一部分
+        unpop_inter_f = part_of_inter_feat[(part_of_inter_feat[self.label_field] == 1) & (part_of_inter_feat[self.popular_col_name] == 0)]
 
-        # 移除拆分后的popular字段
-        self._del_col(self.feature_df, "popular_popular")
-        self._del_col(self.feature_df, "popular_unpopular")
-        self.feature_df = self.feature_df.reset_index(drop=True)
+        # 流行度较高的数据按照用户聚合，得到item_ID
+        pop_user_gb_res = pop_inter_f[self.iid_field].groupby([pop_inter_f[self.uid_field]])
+        pop_user_gb_res = dict(list(pop_user_gb_res))
+        # 流行度较低的数据按照用户聚合，得到item_ID
+        unpop_user_gb_res = unpop_inter_f[self.iid_field].groupby([unpop_inter_f[self.uid_field]])
+        unpop_user_gb_res = dict(list(unpop_user_gb_res))
 
+        item_interaction_popular_list = []
+        item_interaction_unpopular_list = []
 
+        for uid in self.user_feat[self.uid_field]:
+            if pop_user_gb_res.__contains__(uid) and len(pop_user_gb_res[uid]) != 0:
+                popular_list = list(pop_user_gb_res[uid])[:max_item_num]
+                item_interaction_popular_list.append(popular_list + [0] * (max_item_num - len(popular_list)))
+            else:
+                item_interaction_popular_list.append([0] * max_item_num)
+
+            if unpop_user_gb_res.__contains__(uid) and len(unpop_user_gb_res[uid]) != 0:
+                unpopular_list = list(unpop_user_gb_res[uid])[:max_item_num]
+                item_interaction_unpopular_list.append(unpopular_list + [0] * (max_item_num - len(unpopular_list)))
+            else:
+                item_interaction_unpopular_list.append([0] * max_item_num)
+
+        pop_item_interaction_colname = "item_interaction_popular"
+        unpop_item_interaction_colname = "item_interaction_unpopular"
+        for i in range(max_item_num):
+            pop_col = pop_item_interaction_colname + str(i)
+            unpop_col = unpop_item_interaction_colname + str(i)
+            self.set_field_property(
+                pop_col, FeatureType.TOKEN, FeatureSource.USER, 1
+            )
+            self.set_field_property(
+                unpop_col, FeatureType.TOKEN, FeatureSource.USER, 1
+            )
+
+            self.user_feat[pop_col] = [row[i] for row in item_interaction_popular_list]
+
+            self.user_feat[unpop_col] = [row[i] for row in item_interaction_unpopular_list]
     def _add_feature_by_interaction(self):
         item_inter_num = Counter(self.inter_feat[self.iid_field].values)
         num_col_name = 'interacion_num_log'
@@ -366,6 +415,7 @@ class Dataset(torch.utils.data.Dataset):
             os.path.join(current_path, f"../../properties/dataset/{url_file}.yaml")
         ) as f:
             dataset2url = yaml.load(f.read(), Loader=self.config.yaml_loader)
+
         if self.dataset_name in dataset2url:
             url = dataset2url[self.dataset_name]
             return url
@@ -411,7 +461,6 @@ class Dataset(torch.utils.data.Dataset):
             token (str): dataset name.
             dataset_path (str): path of dataset dir.
         """
-
         if not os.path.exists(dataset_path):
             self._download()
         self._load_inter_feat(token, dataset_path)
@@ -658,7 +707,17 @@ class Dataset(torch.utils.data.Dataset):
                     np.array(list(map(float, filter(None, _.split(seq_separator)))))
                     for _ in df[field].values
                 ]
-            self.field2seqlen[field] = max(map(len, df[field].values))
+            max_seq_len = max(map(len, df[field].values))
+            if self.config["seq_len"] and field in self.config["seq_len"]:
+                seq_len = self.config["seq_len"][field]
+                df[field] = [
+                    seq[:seq_len] if len(seq) > seq_len else seq
+                    for seq in df[field].values
+                ]
+                self.field2seqlen[field] = min(seq_len, max_seq_len)
+            else:
+                self.field2seqlen[field] = max_seq_len
+
         return df
 
     def _set_alias(self, alias_name, default_value):
@@ -864,7 +923,6 @@ class Dataset(torch.utils.data.Dataset):
         dis_info = {}
 
         if self.config["discretization"]:
-
             dis_info = self.config["discretization"]
 
             for field in dis_info.keys():
@@ -1019,9 +1077,9 @@ class Dataset(torch.utils.data.Dataset):
         self.logger.info(
             set_color("item交互频率平均数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
         )
-        col_name = "popular"
+        self.popular_col_name = "popular"
         self.set_field_property(
-            col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+            self.popular_col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
         )
 
         popular_threshold = 100
@@ -1042,7 +1100,7 @@ class Dataset(torch.utils.data.Dataset):
                 popular.append(1)
             else:
                 popular.append(0)
-        self.inter_feat[col_name] = popular
+        self.inter_feat[self.popular_col_name] = popular
 
         self.logger.info(
             set_color("item 流行和长尾数据划分阀值: ", "pink") + f"[{popular_threshold}]"
@@ -1735,7 +1793,7 @@ class Dataset(torch.utils.data.Dataset):
                     + f": {self.avg_actions_of_items}",
                 ]
             )
-        info.append(set_color("The number of inters", "blue") + f": {self.inter_num}")
+        info.append(set_color("The number of inters(user和item交互按照流行长尾切分， 并交叉得出的总数)", "blue") + f": {self.inter_num}")
         if self.uid_field and self.iid_field:
             info.append(
                 set_color("The sparsity of the dataset", "blue")
@@ -1996,7 +2054,9 @@ class Dataset(torch.utils.data.Dataset):
         """Saving this :class:`Dataset` object to :attr:`config['checkpoint_dir']`."""
         save_dir = self.config["checkpoint_dir"]
         ensure_dir(save_dir)
-        file = os.path.join(save_dir, f'{self.config["dataset"]}-dataset.pth')
+        file = os.path.join(
+            save_dir, f'{self.config["dataset"]}-{self.__class__.__name__}.pth'
+        )
         self.logger.info(
             set_color("Saving filtered dataset into ", "pink") + f"[{file}]"
         )

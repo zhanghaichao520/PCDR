@@ -68,41 +68,49 @@ def run_recbole(
     dataset = create_dataset(config)
     #logger.info(dataset)
 
-    # print(len(dataset.inter_feat))
-    # print(len(dataset.user_feat))
-    # print(len(dataset.item_feat))
-    print(dataset.user_feat.head(15))
-    print(dataset.item_feat.head(15))
-    print(dataset.inter_feat.head(15))
-
     #myL = list(dataset.inter_feat['interacion_num_log']);
     #myL.sort(reverse=True)
     #plt.bar(range(len(myL)), myL, color='g')
     #plt.show()
-
     # dataset splitting
     train_data, valid_data, test_data = data_preparation(config, dataset)
 
     # max 893286638  1998-04-23 07:10:38
     # min 874724710  1997-09-20 11:05:10
 
+    # model loading and initialization
+    init_seed(config["seed"] + config["local_rank"], config["reproducibility"])
+    model = get_model(config["model"])(config, train_data._dataset).to(config["device"])
+    logger.info(model)
+
+    # trainer loading and initialization
+    trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
+
     # model training
     best_valid_score, best_valid_result = trainer.fit(
         train_data, valid_data, saved=saved, show_progress=config["show_progress"]
     )
 
-    # # model evaluation
-    # test_result = trainer.evaluate(
-    #     test_data, load_best_model=saved, show_progress=config["show_progress"]
-    # )
+    # model evaluation
+    test_result = trainer.evaluate(
+        test_data, load_best_model=saved, show_progress=config["show_progress"]
+    )
 
+    logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
+    logger.info(set_color("test result", "yellow") + f": {test_result}")
+
+    return {
+        "best_valid_score": best_valid_score,
+        "valid_score_bigger": config["valid_metric_bigger"],
+        "best_valid_result": best_valid_result,
+        "test_result": test_result,
+    }
 
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="BPR", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="DEBIAS", help="name of models")
     parser.add_argument(
         "--dataset", "-d", type=str, default="ml-100k", help="name of datasets"
     )
