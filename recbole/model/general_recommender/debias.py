@@ -24,6 +24,7 @@ class ReverseLayerF(Function):
     def backward(ctx, grad_output):
         output = grad_output.neg() * ctx.alpha
         return output, None
+
 class DEBIAS(GeneralRecommender):
     input_type = InputType.PAIRWISE
 
@@ -50,6 +51,10 @@ class DEBIAS(GeneralRecommender):
         self.loss = BPRLoss()
 
         self.matching_network = nn.Sequential(
+            nn.Linear(64, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
             nn.Linear(64, 128),
             nn.ReLU(),
             nn.Linear(128, 64),
@@ -82,7 +87,7 @@ class DEBIAS(GeneralRecommender):
         age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
         gender_embedding = self.user_gender_embedding(interaction["gender"])
         occupation_embedding = self.user_occupation_embedding(interaction["occupation"])
-        return id_embedding + age_embedding + gender_embedding + occupation_embedding
+        return (id_embedding + age_embedding + gender_embedding + occupation_embedding) / 4
     def get_user_popular_embedding(self, interaction):
         r"""Get a batch of user embedding tensor according to input user's id.
 
@@ -98,7 +103,7 @@ class DEBIAS(GeneralRecommender):
         popular_item3_embedding = self.item_id_embedding(interaction["item_interaction_popular3"])
         popular_item4_embedding = self.item_id_embedding(interaction["item_interaction_popular4"])
 
-        return self.get_user_embedding(interaction) + popular_item0_embedding + popular_item1_embedding + popular_item2_embedding + popular_item3_embedding + popular_item4_embedding
+        return self.get_user_embedding(interaction) + (popular_item0_embedding + popular_item1_embedding + popular_item2_embedding + popular_item3_embedding + popular_item4_embedding) / 5
 
 
     def get_user_unpopular_embedding(self, interaction):
@@ -117,7 +122,7 @@ class DEBIAS(GeneralRecommender):
         unpopular_item4_embedding = self.item_id_embedding(interaction["item_interaction_unpopular4"])
 
         return self.get_user_embedding(
-            interaction) + unpopular_item0_embedding + unpopular_item1_embedding + unpopular_item2_embedding + unpopular_item3_embedding + unpopular_item4_embedding
+            interaction) + (unpopular_item0_embedding + unpopular_item1_embedding + unpopular_item2_embedding + unpopular_item3_embedding + unpopular_item4_embedding) / 5
 
 
     def get_item_embedding(self, interaction):
@@ -133,7 +138,7 @@ class DEBIAS(GeneralRecommender):
         interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interacion_num_level"].to(torch.int64))
         gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.int64))
         gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.int64))
-        return id_embedding + interacion_num_level_embedding + gender_F_interacion_num_level_embedding + gender_M_interacion_num_level_embedding
+        return (id_embedding + interacion_num_level_embedding + gender_F_interacion_num_level_embedding + gender_M_interacion_num_level_embedding) / 4
 
     def forward(self, interaction):
         dict = {}
@@ -157,7 +162,7 @@ class DEBIAS(GeneralRecommender):
         dict["Ct"] = Ct
         dict["Iq"] = Iq
 
-        # compute cos simliair
+        # compute cos simliair  kl_div
         Ms_Mt_simliar = torch.cosine_similarity(Ms, Mt)
         Ms_Cs_simliar = torch.cosine_similarity(Ms, Cs)
         Ms_Ct_simliar = torch.cosine_similarity(Ms, Ct)
@@ -217,6 +222,7 @@ class DEBIAS(GeneralRecommender):
                    (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
         sim_loss = sim_loss.sum(axis = 0) / len(interaction)
         sim_loss = -sim_loss
+
         causal_loss = torch.log(1 + torch.exp( (dict["Iq"] * dict["Ms"]).sum(axis=1) - (dict["Iq"] * dict["Mt"]).sum(axis=1)))
         causal_loss = causal_loss.sum(axis=0) / len(interaction)
 
@@ -228,7 +234,9 @@ class DEBIAS(GeneralRecommender):
         domain_loss = domain_loss / 4
         total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
-        return total_loss
+        # return total_loss
+        return (bce_loss1 + bce_loss2 + bce_loss3, sim_loss * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+
 
     def predict(self, interaction):
         dict = self.forward(interaction)

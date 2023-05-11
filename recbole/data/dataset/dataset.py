@@ -1065,18 +1065,18 @@ class Dataset(torch.utils.data.Dataset):
 
     def _divide_popular(self):
         fre_counter = Counter(self.inter_feat[self.iid_field].values)
-        self.logger.info(
-            set_color("item交互频率中位数: ", "pink") + f"[{np.median(list(fre_counter.values()))}]"
-        )
-        self.logger.info(
-            set_color("item交互频率上4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.25)}]"
-        )
-        self.logger.info(
-            set_color("item交互频率下4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
-        )
-        self.logger.info(
-            set_color("item交互频率平均数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
-        )
+        # self.logger.info(
+        #     set_color("item交互频率中位数: ", "pink") + f"[{np.median(list(fre_counter.values()))}]"
+        # )
+        # self.logger.info(
+        #     set_color("item交互频率上4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.25)}]"
+        # )
+        # self.logger.info(
+        #     set_color("item交互频率下4位数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
+        # )
+        # self.logger.info(
+        #     set_color("item交互频率平均数: ", "pink") + f"[{np.quantile(list(fre_counter.values()), 0.75)}]"
+        # )
         self.popular_col_name = "popular"
         self.set_field_property(
             self.popular_col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1

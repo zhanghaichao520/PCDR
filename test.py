@@ -61,12 +61,12 @@ def run_recbole(
     # logger initialization
     init_logger(config)
     logger = getLogger()
-    #logger.info(sys.argv)
-    #logger.info(config)
+    logger.info(sys.argv)
+    logger.info(config)
 
     # dataset filtering
     dataset = create_dataset(config)
-    #logger.info(dataset)
+    logger.info(dataset)
 
     #myL = list(dataset.inter_feat['interacion_num_log']);
     #myL.sort(reverse=True)
