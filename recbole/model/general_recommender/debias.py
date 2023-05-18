@@ -42,6 +42,7 @@ class DEBIAS(GeneralRecommender):
         self.user_gender_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_occupation_embedding = nn.Embedding(self.n_users, self.embedding_size)
 
+        #
         self.item_id_embedding = nn.Embedding(self.n_items, self.embedding_size)
         self.item_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
         self.item_gender_M_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
@@ -136,9 +137,9 @@ class DEBIAS(GeneralRecommender):
         """
         id_embedding = self.item_id_embedding(interaction[self.ITEM_ID])
         interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interacion_num_level"].to(torch.int64))
-        gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.int64))
-        gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.int64))
-        return (id_embedding + interacion_num_level_embedding + gender_F_interacion_num_level_embedding + gender_M_interacion_num_level_embedding) / 4
+        # gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.int64))
+        # gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.int64))
+        return (id_embedding + interacion_num_level_embedding) / 2
 
     def forward(self, interaction):
         dict = {}

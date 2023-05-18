@@ -159,10 +159,6 @@ class Dataset(torch.utils.data.Dataset):
         self.feat_name_list = self._build_feat_name_list()
         if self.benchmark_filename_list is None:
             self._data_filtering()
-        #划分popular的item
-        self._divide_popular()
-        # 先添加交互次数，再归一化
-        self._add_feature_by_interaction()
 
         self._remap_ID_all()
         self._user_item_feat_preparation()
@@ -172,6 +168,10 @@ class Dataset(torch.utils.data.Dataset):
         self._discretization()
         self._preload_weight_matrix()
 
+        # 划分popular的item
+        self._divide_popular()
+        # 先添加交互次数，再归一化
+        self._add_feature_by_interaction()
         # 添加用户属性： 流行交互商品和不流行交互商品， 需要等set label后再做， 因为只需要添加正例
         self._user_dataset_add_interaction_item(max_item_num=5)
 
@@ -182,19 +182,6 @@ class Dataset(torch.utils.data.Dataset):
 
         self._add_interaction_level()
 
-        # self._merge_user_field_to_dataset()
-
-
-    def _merge_user_field_to_dataset(self):
-        # 先把UID塞到最后一列
-        uid_list = self.inter_feat[self.uid_field]
-        self._del_col(self.inter_feat, self.uid_field)
-        self.set_field_property(
-            self.uid_field, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
-        )
-        self.inter_feat[self.uid_field] = uid_list
-        # 把用户的属性合并过来
-        self.inter_feat = pd.merge(self.inter_feat, self.user_feat, on=self.uid_field)
 
     def _user_dataset_add_interaction_item(self, max_item_num = 5):
         '''
@@ -222,12 +209,14 @@ class Dataset(torch.utils.data.Dataset):
         for uid in self.user_feat[self.uid_field]:
             if pop_user_gb_res.__contains__(uid) and len(pop_user_gb_res[uid]) != 0:
                 popular_list = list(pop_user_gb_res[uid])[:max_item_num]
+                popular_list = list(map(int, popular_list))
                 item_interaction_popular_list.append(popular_list + [0] * (max_item_num - len(popular_list)))
             else:
                 item_interaction_popular_list.append([0] * max_item_num)
 
             if unpop_user_gb_res.__contains__(uid) and len(unpop_user_gb_res[uid]) != 0:
                 unpopular_list = list(unpop_user_gb_res[uid])[:max_item_num]
+                unpopular_list = list(map(int, unpopular_list))
                 item_interaction_unpopular_list.append(unpopular_list + [0] * (max_item_num - len(unpopular_list)))
             else:
                 item_interaction_unpopular_list.append([0] * max_item_num)
@@ -277,8 +266,6 @@ class Dataset(torch.utils.data.Dataset):
         if self.config["interaction_level"] is not None:
             level = self.config["interaction_level"]
 
-        factor = 1 / level
-
         for column in self.inter_feat.columns.values:
             if not str(column).endswith("interacion_num_log"):
                 continue
@@ -289,11 +276,12 @@ class Dataset(torch.utils.data.Dataset):
                 level_col_name, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
             )
 
+            min_val = self.inter_feat[column].min()
+            level_interval = (self.inter_feat[column].max() - min_val) / level
+
             inter_fre_level_list = []
             for item in self.inter_feat[column]:
-                level = int(item / factor)
-                if item != 0 and item != 1 and item % factor != 0:
-                    level += 1
+                level = int((item - min_val) / level_interval)
                 inter_fre_level_list.append(level)
 
             self.inter_feat[level_col_name] = inter_fre_level_list
@@ -1793,7 +1781,7 @@ class Dataset(torch.utils.data.Dataset):
                     + f": {self.avg_actions_of_items}",
                 ]
             )
-        info.append(set_color("The number of inters(user和item交互按照流行长尾切分， 并交叉得出的总数)", "blue") + f": {self.inter_num}")
+        info.append(set_color("The number of inters", "blue") + f": {self.inter_num}")
         if self.uid_field and self.iid_field:
             info.append(
                 set_color("The sparsity of the dataset", "blue")
@@ -1845,8 +1833,8 @@ class Dataset(torch.utils.data.Dataset):
         """Given split ratios, and total number, calculate the number of each part after splitting.
 
         Other than the first one, each part is rounded down.
-
         Args:
+
             tot (int): Total number.
             ratios (list): List of split ratios. No need to be normalized.
 
