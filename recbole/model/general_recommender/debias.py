@@ -5,8 +5,8 @@
 
 import torch
 import torch.nn as nn
-
 from recbole.model.abstract_recommender import GeneralRecommender
+
 from recbole.model.init import xavier_normal_initialization
 from recbole.model.loss import BPRLoss
 from recbole.utils import InputType
@@ -33,7 +33,7 @@ class DEBIAS(GeneralRecommender):
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight1 = 1
+        self.weight1 = 0.1
         self.weight2 = 1
         self.weight3 = 1
         # define layers and loss
@@ -219,10 +219,13 @@ class DEBIAS(GeneralRecommender):
         bce_loss3 = bce_loss(dict["Y3"], interaction["label"])
 
         gm = 0.5
-        sim_loss = torch.exp(dict["Ms_Mt_simliar"] / gm)  /\
-                   (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
-        sim_loss = sim_loss.sum(axis = 0) / len(interaction)
-        sim_loss = -sim_loss
+        sim_loss1 = torch.exp(dict["Ms_Mt_simliar"] / gm)
+        sim_loss1 = sim_loss1.sum(axis = 0) / len(interaction)
+        sim_loss1 = -sim_loss1
+
+        sim_loss2 = (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
+        sim_loss2 = sim_loss2.sum(axis = 0) / len(interaction)
+
 
         causal_loss = torch.log(1 + torch.exp( (dict["Iq"] * dict["Ms"]).sum(axis=1) - (dict["Iq"] * dict["Mt"]).sum(axis=1)))
         causal_loss = causal_loss.sum(axis=0) / len(interaction)
@@ -233,10 +236,10 @@ class DEBIAS(GeneralRecommender):
         domain_loss = bce_loss(dict["domin_network_Cs"], d1) + bce_loss(dict["domin_network_Ct"], d0) \
                       + bce_loss(dict["domin_network_Ms"], d1) + bce_loss(dict["domin_network_Mt"], d0)
         domain_loss = domain_loss / 4
-        total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss * self.weight1 + causal_loss * self.weight2\
+        total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return (bce_loss1 + bce_loss2 + bce_loss3, sim_loss * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3) * 2,  sim_loss1 * self.weight1, sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
