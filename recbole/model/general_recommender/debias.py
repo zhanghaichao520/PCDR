@@ -33,9 +33,9 @@ class DEBIAS(GeneralRecommender):
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight1 = 0.1
-        self.weight2 = 1
-        self.weight3 = 1
+        self.weight1 = 0.5
+        self.weight2 = 2
+        self.weight3 = 2
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_age_embedding = nn.Embedding(self.n_users, self.embedding_size)
@@ -85,10 +85,11 @@ class DEBIAS(GeneralRecommender):
         self.apply(xavier_normal_initialization)
     def get_user_embedding(self, interaction):
         id_embedding = self.user_id_embedding(interaction[self.USER_ID])
-        age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
-        gender_embedding = self.user_gender_embedding(interaction["gender"])
-        occupation_embedding = self.user_occupation_embedding(interaction["occupation"])
-        return (id_embedding + age_embedding + gender_embedding + occupation_embedding) / 4
+        # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
+        # gender_embedding = self.user_gender_embedding(interaction["gender"])
+        # occupation_embedding = self.user_occupation_embedding(interaction["occupation"])
+        # return (id_embedding + age_embedding + gender_embedding + occupation_embedding) / 4
+        return id_embedding
     def get_user_popular_embedding(self, interaction):
         r"""Get a batch of user embedding tensor according to input user's id.
 
@@ -136,11 +137,11 @@ class DEBIAS(GeneralRecommender):
             torch.FloatTensor: The embedding tensor of a batch of item, shape: [batch_size, embedding_size]
         """
         id_embedding = self.item_id_embedding(interaction[self.ITEM_ID])
-        interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interacion_num_level"].to(torch.int64))
+        # interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interaction_num_level"].to(torch.int64))
         # gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.int64))
         # gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.int64))
-        return (id_embedding + interacion_num_level_embedding) / 2
-
+        # return (id_embedding + interacion_num_level_embedding) / 2
+        return id_embedding
     def forward(self, interaction):
         dict = {}
         user_popular_embedding = self.get_user_popular_embedding(interaction)
@@ -164,6 +165,12 @@ class DEBIAS(GeneralRecommender):
         dict["Iq"] = Iq
 
         # compute cos simliair  kl_div
+        # Ms_Mt_simliar = torch.kl_div(Ms,Mt)
+        # Ms_Cs_simliar = torch.kl_div(Ms,Cs)
+        # Ms_Ct_simliar = torch.kl_div(Ms,Ct)
+        # Mt_Cs_simliar = torch.kl_div(Mt,Cs)
+        # Mt_Ct_simliar = torch.kl_div(Mt,Ct)
+
         Ms_Mt_simliar = torch.cosine_similarity(Ms, Mt)
         Ms_Cs_simliar = torch.cosine_similarity(Ms, Cs)
         Ms_Ct_simliar = torch.cosine_similarity(Ms, Ct)
@@ -221,7 +228,7 @@ class DEBIAS(GeneralRecommender):
         gm = 0.5
         sim_loss1 = torch.exp(dict["Ms_Mt_simliar"] / gm)
         sim_loss1 = sim_loss1.sum(axis = 0) / len(interaction)
-        sim_loss1 = -sim_loss1
+        sim_loss1 = 1/sim_loss1
 
         sim_loss2 = (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
         sim_loss2 = sim_loss2.sum(axis = 0) / len(interaction)
@@ -239,10 +246,25 @@ class DEBIAS(GeneralRecommender):
         total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3) * 2,  sim_loss1 * self.weight1, sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
         dict = self.forward(interaction)
         return dict["Y1_predict"]
 
+    def full_sort_predict(self, interaction):
+        user_popular_embedding = self.get_user_popular_embedding(interaction)
+        user_unpopular_embedding = self.get_user_unpopular_embedding(interaction)
+        all_item_e = self.item_id_embedding.weight
+
+        Yd = interaction["popular"].unsqueeze(-1)
+
+        Ms = self.matching_network(user_popular_embedding)
+        Mt = self.matching_network(user_unpopular_embedding)
+        Cs = self.conformity_network(user_popular_embedding)
+        Ct = self.conformity_network(user_unpopular_embedding)
+
+        Y1 = torch.matmul(((Yd * Ms) + (1 - Yd) * Mt), all_item_e.transpose(0, 1))  # [user_num,item_num]
+
+        return Y1.view(-1)

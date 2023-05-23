@@ -109,6 +109,8 @@ def rename_atomic_files(folder, old_name, new_name):
         new_name (string): New name for atomic files.
     """
     files = os.listdir(folder)
+    # 不同数据集有的包了一层文件夹， 有的没有，懒得判断了
+    #files = os.listdir(os.path.join(folder, old_name))
     for f in files:
         base, suf = os.path.splitext(f)
         if not old_name in base:
@@ -116,6 +118,8 @@ def rename_atomic_files(folder, old_name, new_name):
         assert suf in {".inter", ".user", ".item"}
         os.rename(
             os.path.join(folder, f),
+            # 这里也是， 和上面一起改就行了
+            # os.path.join(os.path.join(folder, old_name), f),
             os.path.join(folder, base.replace(old_name, new_name) + suf),
         )
 

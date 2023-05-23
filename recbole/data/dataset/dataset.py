@@ -238,8 +238,21 @@ class Dataset(torch.utils.data.Dataset):
             self.user_feat[unpop_col] = [row[i] for row in item_interaction_unpopular_list]
     def _add_feature_by_interaction(self):
         item_inter_num = Counter(self.inter_feat[self.iid_field].values)
-        num_col_name = 'interacion_num_log'
 
+        # add interaction_num_countdown for sample test dataset in build method
+        colname_interaction_num_countdown = "interaction_num_countdown"
+        self.set_field_property(
+            colname_interaction_num_countdown, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
+        )
+        inter_fre_list = []
+        for item in self.inter_feat[self.iid_field]:
+            if item_inter_num[item] == 0:
+                inter_fre_list.append(0)
+            else:
+                inter_fre_list.append(1/item_inter_num[item])
+        self.inter_feat[colname_interaction_num_countdown] = inter_fre_list
+
+        num_col_name = 'interaction_num_log'
         self._add_interaction_info(item_inter_num, num_col_name)
 
         if self.config["interaction_level_user_field"] is None:
@@ -257,7 +270,7 @@ class Dataset(torch.utils.data.Dataset):
 
                 # 将这些交互数据生成新的交互结果
                 item_inter_num = Counter(inter_df[self.iid_field].values)
-                num_col_name = f'{field}_{value}_interacion_num_log'
+                num_col_name = f'{field}_{value}_interaction_num_log'
 
                 self._add_interaction_info(item_inter_num, num_col_name)
     def _add_interaction_level(self):
@@ -267,7 +280,7 @@ class Dataset(torch.utils.data.Dataset):
             level = self.config["interaction_level"]
 
         for column in self.inter_feat.columns.values:
-            if not str(column).endswith("interacion_num_log"):
+            if not str(column).endswith("interaction_num_log"):
                 continue
 
             level_col_name = str(column).replace("log","level")
@@ -479,6 +492,8 @@ class Dataset(torch.utils.data.Dataset):
                 raise ValueError(f"File {inter_feat_path} not exist.")
 
             inter_feat = self._load_feat(inter_feat_path, FeatureSource.INTERACTION)
+            if self.config["load_inter_data_limit"] is not None:
+                inter_feat = inter_feat.sample(n=self.config["load_inter_data_limit"])
             self.logger.debug(
                 f"Interaction feature loaded successfully from [{inter_feat_path}]."
             )
@@ -528,7 +543,7 @@ class Dataset(torch.utils.data.Dataset):
                 f"[{source.value}] feature loaded successfully from [{feat_path}]."
             )
         else:
-            feat = None
+            feat = self.inter_feat[field].drop_duplicates().to_frame(name=field).reset_index(drop=True)
             self.logger.debug(
                 f"[{feat_path}] not found, [{source.value}] features are not loaded."
             )
@@ -1982,6 +1997,12 @@ class Dataset(torch.utils.data.Dataset):
         Returns:
             list: List of built :class:`Dataset`.
         """
+        # 用户与流行度较高商品显式的交互，
+        if self.config["inter_frequency_sample"] is not None:
+            if "test_data" in self.config["inter_frequency_sample"]:
+                test_data = self.inter_feat[(self.inter_feat["interaction_num_level"] >= 3) & (self.inter_feat["interaction_num_level"] <= 7)]
+                test_data = test_data.sample(frac = 0.4, replace=False, weights='interaction_num_countdown')
+                test_data = self._dataframe_to_interaction(test_data)
         self._change_feat_format()
 
         if self.benchmark_filename_list is not None:
@@ -2036,6 +2057,11 @@ class Dataset(torch.utils.data.Dataset):
                 f"The splitting_method [{split_mode}] has not been implemented."
             )
 
+        # trick 先按照流行度等级切分交互数据集， ， 作为测试集
+        if self.config["inter_frequency_sample"] is not None:
+            if "test_data" in self.config["inter_frequency_sample"]:
+                test_data = self.copy(test_data)
+                datasets[2] = test_data
         return datasets
 
     def save(self):
