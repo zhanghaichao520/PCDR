@@ -59,4 +59,4 @@ interaction_level: 10
 interaction_level_user_field: []
 
 load_inter_data_limit: ~
-inter_frequency_sample: []
+inter_frequency_sample: [test_data]
