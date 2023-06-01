@@ -1068,6 +1068,12 @@ class Dataset(torch.utils.data.Dataset):
 
     def _divide_popular(self):
         fre_counter = Counter(self.inter_feat[self.iid_field].values)
+        self.logger.info(
+            set_color("item交互频率最大值: ", "pink") + f"[{np.max(list(fre_counter.values()))}]"
+        )
+        self.logger.info(
+            set_color("item交互频率最小值: ", "pink") + f"[{np.min(list(fre_counter.values()))}]"
+        )
         # self.logger.info(
         #     set_color("item交互频率中位数: ", "pink") + f"[{np.median(list(fre_counter.values()))}]"
         # )
@@ -1089,7 +1095,7 @@ class Dataset(torch.utils.data.Dataset):
 
         fre_val = list(fre_counter.values())
         fre_val.sort()
-        threshold_num = sum(fre_val) // 2
+        threshold_num = sum(fre_val) // 3
         cur = 0
         for i in fre_val:
             cur += i
@@ -1997,11 +2003,14 @@ class Dataset(torch.utils.data.Dataset):
         Returns:
             list: List of built :class:`Dataset`.
         """
-        # 用户与流行度较高商品显式的交互，
+        # 用户与流行度较高商品显式的交互
         if self.config["inter_frequency_sample"] is not None:
             if "test_data" in self.config["inter_frequency_sample"]:
+                # 直接按照交互次数截取测试集
+                # test_data = self.inter_feat[(1 / self.inter_feat["interaction_num_countdown"] >= 101) & ( 1 / self.inter_feat["interaction_num_countdown"] <= 200)]
+                # test_data = test_data.sample(frac = 0.4)
                 test_data = self.inter_feat[(self.inter_feat["interaction_num_level"] >= 3) & (self.inter_feat["interaction_num_level"] <= 7)]
-                test_data = test_data.sample(frac = 0.4, replace=False, weights='interaction_num_countdown')
+                test_data = test_data.sample(frac = 0.01, replace=False, weights='interaction_num_countdown')
                 test_data = self._dataframe_to_interaction(test_data)
         self._change_feat_format()
 

@@ -627,6 +627,8 @@ class Trainer(AbstractTrainer):
         if not self.config["single_spec"]:
             result = self._map_reduce(result, num_sample)
         self.wandblogger.log_eval_metrics(result, head="eval")
+
+        # torch.save(self.model.data, "/Users/hebert/Desktop/Ct.txt")
         return result
 
     def _map_reduce(self, result, num_sample):

@@ -68,15 +68,8 @@ def run_recbole(
     dataset = create_dataset(config)
     logger.info(dataset)
 
-    #myL = list(dataset.inter_feat['interacion_num_log']);
-    #myL.sort(reverse=True)
-    #plt.bar(range(len(myL)), myL, color='g')
-    #plt.show()
     # dataset splitting
     train_data, valid_data, test_data = data_preparation(config, dataset)
-
-    # max 893286638  1998-04-23 07:10:38
-    # min 874724710  1997-09-20 11:05:10
 
     # model loading and initialization
     init_seed(config["seed"] + config["local_rank"], config["reproducibility"])
@@ -94,23 +87,25 @@ def run_recbole(
     # model evaluation
     test_result = trainer.evaluate(
         test_data, load_best_model=saved, show_progress=config["show_progress"]
+        # , model_file="saved/DEBIAS-May-30-2023_19-48-55.pth"
     )
 
     logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
     logger.info(set_color("test result", "yellow") + f": {test_result}")
-
-    return {
-        "best_valid_score": best_valid_score,
-        "valid_score_bigger": config["valid_metric_bigger"],
-        "best_valid_result": best_valid_result,
-        "test_result": test_result,
-    }
-
+    logger.info(set_color("测试集数据: ", "pink") + f"[{len(test_data.dataset)}]")
+    logger.info(set_color("测试集数据占比: ", "pink") + f"[{len(test_data.dataset) / len(dataset)}]")
+    # return {
+    #     "best_valid_score": best_valid_score,
+    #     "valid_score_bigger": config["valid_metric_bigger"],
+    #     "best_valid_result": best_valid_result,
+    #     "test_result": test_result,
+    # }
+    #
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="BPR", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="LightGCN", help="name of models")
     parser.add_argument(
         "--dataset", "-d", type=str, default="jester", help="name of datasets"
     )
@@ -126,9 +121,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--world_size", type=int, default=-1, help="total number of jobs"
-    )
-    parser.add_argument(
-        "--threshold", type=str, default="{rating:3}", help="label data threshold"
     )
     parser.add_argument(
         "--group_offset",

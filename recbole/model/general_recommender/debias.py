@@ -33,6 +33,7 @@ class DEBIAS(GeneralRecommender):
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
+        self.weight0 = 0.001
         self.weight1 = 0.5
         self.weight2 = 2
         self.weight3 = 2
@@ -83,6 +84,8 @@ class DEBIAS(GeneralRecommender):
         self.alpha = 2. / (1. + np.exp(-10 * self.p)) - 1
         # parameters initialization
         self.apply(xavier_normal_initialization)
+
+        self.data = []
     def get_user_embedding(self, interaction):
         id_embedding = self.user_id_embedding(interaction[self.USER_ID])
         # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
@@ -192,6 +195,8 @@ class DEBIAS(GeneralRecommender):
         Y3 = ((Iq * ((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)))).sum(axis = 1)
 
         dict["Y1_predict"] = Y1
+        dict["Y2_predict"] = Y2
+        dict["Y3_predict"] = Y3
         Y1 = sigmod(Y1)
         Y2 = sigmod(Y2)
         Y3 = sigmod(Y3)
@@ -246,7 +251,7 @@ class DEBIAS(GeneralRecommender):
         total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss1 * self.weight0, sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
@@ -266,5 +271,10 @@ class DEBIAS(GeneralRecommender):
         Ct = self.conformity_network(user_unpopular_embedding)
 
         Y1 = torch.matmul(((Yd * Ms) + (1 - Yd) * Mt), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
+        # for list in Ct.numpy().tolist():
+        #     self.data.append(list)
         return Y1.view(-1)
+
