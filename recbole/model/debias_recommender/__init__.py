@@ -1,5 +1,5 @@
 from recbole.model.debias_recommender.macr import MACR
-from recbole.model.debias_recommender.debias import DEBIAS
+from recbole.model.debias_recommender.dmcb import DMCB
 from recbole.model.debias_recommender.mf import MF
 from recbole.model.debias_recommender.cause import CausE
 from recbole.model.debias_recommender.dice import DICE

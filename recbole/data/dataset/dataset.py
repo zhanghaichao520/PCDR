@@ -1056,12 +1056,6 @@ class Dataset(torch.utils.data.Dataset):
 
     def _divide_popular(self):
         fre_counter = Counter(self.inter_feat[self.iid_field].values)
-        self.logger.info(
-            set_color("item交互频率最大值: ", "pink") + f"[{np.max(list(fre_counter.values()))}]"
-        )
-        self.logger.info(
-            set_color("item交互频率最小值: ", "pink") + f"[{np.min(list(fre_counter.values()))}]"
-        )
         # self.logger.info(
         #     set_color("item交互频率中位数: ", "pink") + f"[{np.median(list(fre_counter.values()))}]"
         # )

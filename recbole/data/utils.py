@@ -21,6 +21,7 @@ from recbole.data.dataloader import *
 from recbole.sampler import KGSampler, Sampler, RepeatableSampler
 from recbole.utils import ModelType, ensure_dir, get_local_time, set_color
 from recbole.utils.argument_list import dataset_arguments
+from recbole.sampler import DICESampler
 
 
 def create_dataset(config):
@@ -233,6 +234,7 @@ def get_dataloader(config, phase):
         "ENMF": _get_AE_dataloader,
         "RaCT": _get_AE_dataloader,
         "RecVAE": _get_AE_dataloader,
+        "DICE": _get_DICE_dataloader,
     }
 
     if config["model"] in register_table:
@@ -244,6 +246,25 @@ def get_dataloader(config, phase):
             return TrainDataLoader
         else:
             return KnowledgeBasedDataLoader
+    else:
+        eval_mode = config["eval_args"]["mode"]
+        if eval_mode == "full":
+            return FullSortEvalDataLoader
+        else:
+            return NegSampleEvalDataLoader
+
+def _get_DICE_dataloader(config, phase):
+    """Customized function for DICE models to get correct dataloader class.
+
+    Args:
+        config (Config): An instance object of Config, used to record parameter information.
+        phase (str): The stage of dataloader. It can only take two values: 'train' or 'evaluation'.
+
+    Returns:
+        type: The dataloader class that meets the requirements in :attr:`config` and :attr:`phase`.
+    """
+    if phase == 'train':
+        return DICEDataloader
     else:
         eval_mode = config["eval_args"]["mode"]
         if eval_mode == "full":
@@ -294,7 +315,9 @@ def create_samplers(config, dataset, built_datasets):
     train_sampler, valid_sampler, test_sampler = None, None, None
 
     if train_neg_sample_args["distribution"] != "none":
-        if not config["repeatable"]:
+        if config['model'] == 'DICE':
+            sampler = DICESampler(phases, built_datasets, train_neg_sample_args['distribution'], train_neg_sample_args["alpha"])
+        elif not config["repeatable"]:
             sampler = Sampler(
                 phases,
                 built_datasets,

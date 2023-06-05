@@ -17,6 +17,7 @@ from recbole.data import (
     create_dataset,
     data_preparation,
 )
+import numpy as np
 import os
 from recbole.utils import (
     init_logger,
@@ -77,8 +78,16 @@ def split_dataset(config):
         else:
             inter_fre_list.append(1 / item_inter_num[item])
     test_part[colname_interaction_num_countdown] = inter_fre_list
+    test_data_total_num = len(test_part)
+    print("测试集 数据量" + f"[{test_data_total_num}]" )
+    print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
+    print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    test_part = test_part.sample(frac=0.7, replace=False, weights='interaction_num_countdown')
+    test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 20)]
+    # test_part = test_part.sample(frac=0.7, replace=False, weights='interaction_num_countdown')
+    print("测试集截断后数据量" + f"[{len(test_part)}]" )
+    print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
+
 
     test_file_path = dataset_path + "-test"
     if not os.path.exists(test_file_path):
@@ -189,9 +198,9 @@ def run_recbole(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="DEBIAS", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="DMCB", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
+        "--dataset", "-d", type=str, default="ml-100k", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(

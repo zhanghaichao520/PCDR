@@ -25,11 +25,11 @@ class ReverseLayerF(Function):
         output = grad_output.neg() * ctx.alpha
         return output, None
 
-class DEBIAS(DebiasedRecommender):
+class DMCB(DebiasedRecommender):
     input_type = InputType.PAIRWISE
 
     def __init__(self, config, dataset):
-        super(DEBIAS, self).__init__(config, dataset)
+        super(DMCB, self).__init__(config, dataset)
 
         # load parameters info
         self.embedding_size = config["embedding_size"]

@@ -18,6 +18,7 @@ from recbole.utils import InputType
 from recbole.model.abstract_recommender import DebiasedRecommender
 
 
+
 class DICE(DebiasedRecommender):
     r"""
         DICE model, which equipped with DICESampler(in recbole-debias.sampler) and DICETrainer(in recbole-debias.trainer)
@@ -144,9 +145,9 @@ class DICE(DebiasedRecommender):
         score = self.forward(user, item, 'tot')
         return score
 
-    # def full_sort_predict(self, interaction):
-    #     user = interaction[self.USER_ID]
-    #     user_e = self.get_user_emb_total(user)
-    #     all_item_e = torch.cat((self.items_int.weight, self.items_pop.weight), 1)
-    #     score = torch.matmul(user_e, all_item_e.transpose(0, 1))
-    #     return score.view(-1)
+    def full_sort_predict(self, interaction):
+        user = interaction[self.USER_ID]
+        user_e = self.get_user_emb_total(user)
+        all_item_e = torch.cat((self.items_int.weight, self.items_pop.weight), 1)
+        score = torch.matmul(user_e, all_item_e.transpose(0, 1))
+        return score.view(-1)

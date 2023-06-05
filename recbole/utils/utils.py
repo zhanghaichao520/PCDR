@@ -106,6 +106,10 @@ def get_trainer(model_type, model_name):
             return getattr(
                 importlib.import_module("recbole.trainer"), "TraditionalTrainer"
             )
+        elif model_type == ModelType.DEBIAS:
+            return getattr(
+                importlib.import_module("recbole.trainer"), "DebiasTrainer"
+            )
         else:
             return getattr(importlib.import_module("recbole.trainer"), "Trainer")
 
