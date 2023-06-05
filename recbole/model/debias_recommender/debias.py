@@ -5,7 +5,7 @@
 
 import torch
 import torch.nn as nn
-from recbole.model.abstract_recommender import GeneralRecommender
+from recbole.model.abstract_recommender import DebiasedRecommender
 
 from recbole.model.init import xavier_normal_initialization
 from recbole.model.loss import BPRLoss
@@ -25,7 +25,7 @@ class ReverseLayerF(Function):
         output = grad_output.neg() * ctx.alpha
         return output, None
 
-class DEBIAS(GeneralRecommender):
+class DEBIAS(DebiasedRecommender):
     input_type = InputType.PAIRWISE
 
     def __init__(self, config, dataset):
@@ -85,7 +85,10 @@ class DEBIAS(GeneralRecommender):
         # parameters initialization
         self.apply(xavier_normal_initialization)
 
-        self.data = []
+        self.Ms_data = []
+        self.Mt_data = []
+        self.Cs_data = []
+        self.Ct_data = []
     def get_user_embedding(self, interaction):
         id_embedding = self.user_id_embedding(interaction[self.USER_ID])
         # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
@@ -190,9 +193,9 @@ class DEBIAS(GeneralRecommender):
 
         sigmod = nn.Sigmoid()
 
-        Y1 = ((Iq * ((Yd * Ms) + (1 - Yd) * Mt))).sum(axis = 1)
-        Y2 = ((Iq * ((Yd * Cs) + (1 - Yd) * Ct))).sum(axis = 1)
-        Y3 = ((Iq * ((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)))).sum(axis = 1)
+        Y1 = ((Iq * ((Yd * Ms) + (1 - Yd) * Mt))).sum(dim = 1)
+        Y2 = ((Iq * ((Yd * Cs) + (1 - Yd) * Ct))).sum(dim = 1)
+        Y3 = ((Iq * ((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)))).sum(dim = 1)
 
         dict["Y1_predict"] = Y1
         dict["Y2_predict"] = Y2
@@ -232,15 +235,15 @@ class DEBIAS(GeneralRecommender):
 
         gm = 0.5
         sim_loss1 = torch.exp(dict["Ms_Mt_simliar"] / gm)
-        sim_loss1 = sim_loss1.sum(axis = 0) / len(interaction)
+        sim_loss1 = sim_loss1.sum(dim = 0) / len(interaction)
         sim_loss1 = 1/sim_loss1
 
         sim_loss2 = (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
-        sim_loss2 = sim_loss2.sum(axis = 0) / len(interaction)
+        sim_loss2 = sim_loss2.sum(dim = 0) / len(interaction)
 
 
-        causal_loss = torch.log(1 + torch.exp( (dict["Iq"] * dict["Ms"]).sum(axis=1) - (dict["Iq"] * dict["Mt"]).sum(axis=1)))
-        causal_loss = causal_loss.sum(axis=0) / len(interaction)
+        causal_loss = torch.log(1 + torch.exp( (dict["Iq"] * dict["Ms"]).sum(dim=1) - (dict["Iq"] * dict["Mt"]).sum(dim=1)))
+        causal_loss = causal_loss.sum(dim=0) / len(interaction)
 
         d0 = torch.zeros_like(dict["domin_network_Ms"])
         d1 = torch.ones_like(dict["domin_network_Ms"])
@@ -251,7 +254,7 @@ class DEBIAS(GeneralRecommender):
         total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss1 * self.weight0, sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3),   sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
@@ -274,7 +277,13 @@ class DEBIAS(GeneralRecommender):
         Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
         Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
+        # for list in Ms.numpy().tolist():
+        #     self.Ms_data.append(list)
+        # for list in Mt.numpy().tolist():
+        #     self.Mt_data.append(list)
+        # for list in Cs.numpy().tolist():
+        #     self.Cs_data.append(list)
         # for list in Ct.numpy().tolist():
-        #     self.data.append(list)
+        #     self.Ct_data.append(list)
         return Y1.view(-1)
 

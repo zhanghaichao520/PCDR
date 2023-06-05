@@ -40,7 +40,7 @@ rm_dup_inter: ~                 # (str) Whether to remove duplicated user-item i
 val_interval: ~                 # (dict) Filter inter by values in {value field (str): interval (str)}.
 filter_inter_by_user_or_item: True    # (bool) Whether or not to filter inter by user or item.
 user_inter_num_interval: [10, 10000]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
-item_inter_num_interval: [10, 10000]      # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+item_inter_num_interval: ~      # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
 
 # Preprocessing
 alias_of_user_id: ~             # (list) Fields' names remapped into the same index system with USER_ID_FIELD.
@@ -59,4 +59,3 @@ interaction_level: 10
 interaction_level_user_field: []
 
 load_inter_data_limit: ~
-inter_frequency_sample: [test_data]

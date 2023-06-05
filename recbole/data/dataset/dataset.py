@@ -13,7 +13,6 @@ recbole.data.dataset
 """
 
 import copy
-import logging
 import pickle
 import os
 import yaml
@@ -113,6 +112,7 @@ class Dataset(torch.utils.data.Dataset):
         Initialize attributes firstly, then load data from atomic files, pre-process the dataset lastly.
         """
         self.logger.debug(set_color(f"Loading {self.__class__} from scratch.", "green"))
+
         self._get_preset()
         self._get_field_from_config()
         self._load_data(self.dataset_name, self.dataset_path)
@@ -122,6 +122,7 @@ class Dataset(torch.utils.data.Dataset):
     def _get_preset(self):
         """Initialization useful inside attributes."""
         self.dataset_path = self.config["data_path"]
+
         self.field2type = {}
         self.field2source = {}
         self.field2id_token = {}
@@ -238,19 +239,6 @@ class Dataset(torch.utils.data.Dataset):
             self.user_feat[unpop_col] = [row[i] for row in item_interaction_unpopular_list]
     def _add_feature_by_interaction(self):
         item_inter_num = Counter(self.inter_feat[self.iid_field].values)
-
-        # add interaction_num_countdown for sample test dataset in build method
-        colname_interaction_num_countdown = "interaction_num_countdown"
-        self.set_field_property(
-            colname_interaction_num_countdown, FeatureType.FLOAT, FeatureSource.INTERACTION, 1
-        )
-        inter_fre_list = []
-        for item in self.inter_feat[self.iid_field]:
-            if item_inter_num[item] == 0:
-                inter_fre_list.append(0)
-            else:
-                inter_fre_list.append(1/item_inter_num[item])
-        self.inter_feat[colname_interaction_num_countdown] = inter_fre_list
 
         num_col_name = 'interaction_num_log'
         self._add_interaction_info(item_inter_num, num_col_name)
@@ -1854,8 +1842,8 @@ class Dataset(torch.utils.data.Dataset):
         """Given split ratios, and total number, calculate the number of each part after splitting.
 
         Other than the first one, each part is rounded down.
-        Args:
 
+        Args:
             tot (int): Total number.
             ratios (list): List of split ratios. No need to be normalized.
 
@@ -2003,15 +1991,6 @@ class Dataset(torch.utils.data.Dataset):
         Returns:
             list: List of built :class:`Dataset`.
         """
-        # 用户与流行度较高商品显式的交互
-        if self.config["inter_frequency_sample"] is not None:
-            if "test_data" in self.config["inter_frequency_sample"]:
-                # 直接按照交互次数截取测试集
-                test_data = self.inter_feat[(1 / self.inter_feat["interaction_num_countdown"] >= 1) & ( 1 / self.inter_feat["interaction_num_countdown"] <= 60)]
-                # test_data = test_data.sample(frac = 0.4)
-                # test_data = self.inter_feat[(self.inter_feat["interaction_num_level"] >= 3) & (self.inter_feat["interaction_num_level"] <= 7)]
-                # test_data = test_data.sample(frac = 0.01, replace=False, weights='interaction_num_countdown')
-                test_data = self._dataframe_to_interaction(test_data)
         self._change_feat_format()
 
         if self.benchmark_filename_list is not None:
@@ -2066,11 +2045,6 @@ class Dataset(torch.utils.data.Dataset):
                 f"The splitting_method [{split_mode}] has not been implemented."
             )
 
-        # trick 先按照流行度等级切分交互数据集， ， 作为测试集
-        if self.config["inter_frequency_sample"] is not None:
-            if "test_data" in self.config["inter_frequency_sample"]:
-                test_data = self.copy(test_data)
-                datasets[2] = test_data
         return datasets
 
     def save(self):

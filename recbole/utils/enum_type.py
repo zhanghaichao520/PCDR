@@ -26,7 +26,7 @@ class ModelType(Enum):
     KNOWLEDGE = 4
     TRADITIONAL = 5
     DECISIONTREE = 6
-
+    DEBIAS=7
 
 class KGDataLoaderState(Enum):
     """States for Knowledge-based DataLoader.

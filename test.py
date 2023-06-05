@@ -8,25 +8,16 @@
 # @Email  : chenyuwuxinn@gmail.com, houyupeng@ruc.edu.cn, zhlin@ruc.edu.cn
 
 import argparse
-from ast import arg
-import logging
 from logging import getLogger
 from collections import Counter, defaultdict
-import  matplotlib.pyplot as plt
 import sys
-import numpy as np
-import math
-import pickle
-from ray import tune
 import pandas as pd
 from recbole.config import Config
 from recbole.data import (
     create_dataset,
     data_preparation,
-    save_split_dataloaders,
-    load_split_dataloaders,
 )
-from recbole.data.transform import construct_transform
+import os
 from recbole.utils import (
     init_logger,
     get_model,
@@ -35,6 +26,85 @@ from recbole.utils import (
     set_color,
     get_flops,
 )
+from recbole.utils.url import (
+    makedirs,
+)
+
+def copy_file(config, source_dataset_path, target_dataset_path, token, file_type):
+    filepath = os.path.join(source_dataset_path, f"{token}.{file_type}")
+    if not os.path.isfile(filepath):
+        raise ValueError(f"File {filepath} not exist.")
+    field_separator = config["field_separator"]
+    encoding = config["encoding"]
+    df = pd.read_csv(
+        filepath,
+        delimiter=field_separator,
+        encoding=encoding,
+        engine="python",
+    )
+    df.to_csv(os.path.join(target_dataset_path, f"{token}.{file_type}"), sep=config["seq_separator"], header=True,
+                      index=False)
+def split_dataset(config):
+    token = config["dataset"]
+    dataset_path = config["data_path"]
+
+    filepath = os.path.join(dataset_path, f"{token}.inter")
+    if not os.path.isfile(filepath):
+        raise ValueError(f"File {filepath} not exist.")
+    field_separator = config["field_separator"]
+    encoding = config["encoding"]
+    df = pd.read_csv(
+        filepath,
+        delimiter=field_separator,
+        encoding=encoding,
+        engine="python",
+    )
+
+    split_radio = config["eval_args"]["split"]["RS"][2]
+
+    test_part = df.sample(frac=split_radio)
+    test_part.reset_index(drop = True,inplace = True)
+
+    # add interaction_num_countdown for sample test dataset in build method
+    iid_field = config["USER_ID_FIELD"]+":token"
+    colname_interaction_num_countdown = "interaction_num_countdown"
+    item_inter_num = Counter(test_part[iid_field].values)
+
+    inter_fre_list = []
+    for item in test_part[iid_field]:
+        if item_inter_num[item] == 0:
+            inter_fre_list.append(0)
+        else:
+            inter_fre_list.append(1 / item_inter_num[item])
+    test_part[colname_interaction_num_countdown] = inter_fre_list
+
+    test_part = test_part.sample(frac=0.7, replace=False, weights='interaction_num_countdown')
+
+    test_file_path = dataset_path + "-test"
+    if not os.path.exists(test_file_path):
+        makedirs(test_file_path)
+    test_part.to_csv(os.path.join(test_file_path, f"{token}.inter"), sep=config["seq_separator"], header=True,
+                     index=False)
+
+    train_part = df.drop(test_part.index)
+    train_part.reset_index(drop = True,inplace = True)
+    train_file_path = dataset_path + "-train"
+    if not os.path.exists(train_file_path):
+        makedirs(train_file_path)
+    train_part.to_csv(os.path.join(train_file_path, f"{token}.inter"), sep=config["seq_separator"], header=True,
+                     index=False)
+
+    copy_file(config, dataset_path, test_file_path, token, "user")
+    copy_file(config, dataset_path, test_file_path, token, "item")
+
+    copy_file(config, dataset_path, train_file_path, token, "user")
+    copy_file(config, dataset_path, train_file_path, token, "item")
+
+
+    config["field_separator"] = config["seq_separator"]
+    config["test_datapath"] = test_file_path
+    config["train_datapath"] = train_file_path
+
 
 
 def run_recbole(
@@ -58,11 +128,17 @@ def run_recbole(
         config_dict=config_dict,
     )
     init_seed(config["seed"], config["reproducibility"])
+    split_dataset(config)
+
+    config["data_path"] = config["train_datapath"]
+    config["eval_args"]["split"]["RS"] = [0.8, 0.2, 0]
+
     # logger initialization
     init_logger(config)
     logger = getLogger()
     logger.info(sys.argv)
     logger.info(config)
+
 
     # dataset filtering
     dataset = create_dataset(config)
@@ -79,35 +155,43 @@ def run_recbole(
     # trainer loading and initialization
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
+    model_file = None
     # model training
-    best_valid_score, best_valid_result = trainer.fit(
-        train_data, valid_data, saved=saved, show_progress=config["show_progress"]
-    )
+    if model_file is None:
+        best_valid_score, best_valid_result = trainer.fit(
+            train_data, valid_data, saved=saved, show_progress=config["show_progress"]
+        )
+
+
+    config["data_path"] = config["train_datapath"]
+    config["eval_args"]["split"]["RS"] = [0.1, 0, 0.9]
+
+    # dataset filtering
+    dataset = create_dataset(config)
+    logger.info(dataset)
+
+    # dataset splitting
+    train_data, valid_data, test_data = data_preparation(config, dataset)
 
     # model evaluation
     test_result = trainer.evaluate(
         test_data, load_best_model=saved, show_progress=config["show_progress"]
-        # , model_file="saved/DEBIAS-May-30-2023_19-48-55.pth"
+        , model_file=model_file
     )
 
-    logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
+    if model_file is None:
+        logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
     logger.info(set_color("test result", "yellow") + f": {test_result}")
     logger.info(set_color("测试集数据: ", "pink") + f"[{len(test_data.dataset)}]")
     logger.info(set_color("测试集数据占比: ", "pink") + f"[{len(test_data.dataset) / len(dataset)}]")
-    # return {
-    #     "best_valid_score": best_valid_score,
-    #     "valid_score_bigger": config["valid_metric_bigger"],
-    #     "best_valid_result": best_valid_result,
-    #     "test_result": test_result,
-    # }
-    #
+
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", type=str, default="DEBIAS", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="ml-100k", help="name of datasets"
+        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(

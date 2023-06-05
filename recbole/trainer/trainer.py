@@ -628,7 +628,10 @@ class Trainer(AbstractTrainer):
             result = self._map_reduce(result, num_sample)
         self.wandblogger.log_eval_metrics(result, head="eval")
 
-        # torch.save(self.model.data, "/Users/hebert/Desktop/Ct.txt")
+        # torch.save(self.model.Ms_data, "/Users/hebert/Desktop/Ms")
+        # torch.save(self.model.Mt_data, "/Users/hebert/Desktop/Mt")
+        # torch.save(self.model.Cs_data, "/Users/hebert/Desktop/Cs")
+        # torch.save(self.model.Ct_data, "/Users/hebert/Desktop/Ct")
         return result
 
     def _map_reduce(self, result, num_sample):
