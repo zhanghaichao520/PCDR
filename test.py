@@ -83,8 +83,8 @@ def split_dataset(config):
     print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
     print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    test_part = test_part.sample(frac=0.1, replace=False, weights='interaction_num_countdown')
-    test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 10)]
+    test_part = test_part.sample(frac=0.4, replace=False, weights='interaction_num_countdown')
+    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 10)]
     print("测试集截断后数据量" + f"[{len(test_part)}]" )
     print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
     test_part.drop("interaction_num_countdown", axis=1, inplace=True)
@@ -96,6 +96,10 @@ def split_dataset(config):
                      index=False)
 
     train_part = df.drop(test_part.index)
+
+    if config["load_inter_data_limit"] is not None:
+        train_part = train_part.sample(n=min(config["load_inter_data_limit"], len(train_part)))
+
     train_part.reset_index(drop = True,inplace = True)
     train_file_path = dataset_path + "-train"
     if not os.path.exists(train_file_path):

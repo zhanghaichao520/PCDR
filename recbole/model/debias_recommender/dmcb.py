@@ -277,13 +277,13 @@ class DMCB(DebiasedRecommender):
         Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
         Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
-        for list in Ms.numpy().tolist():
-            self.Ms_data.append(list)
-        for list in Mt.numpy().tolist():
-            self.Mt_data.append(list)
-        for list in Cs.numpy().tolist():
-            self.Cs_data.append(list)
-        for list in Ct.numpy().tolist():
-            self.Ct_data.append(list)
+        # for list in Ms.numpy().tolist():
+        #     self.Ms_data.append(list)
+        # for list in Mt.numpy().tolist():
+        #     self.Mt_data.append(list)
+        # for list in Cs.numpy().tolist():
+        #     self.Cs_data.append(list)
+        # for list in Ct.numpy().tolist():
+        #     self.Ct_data.append(list)
         return Y1.view(-1)
 
