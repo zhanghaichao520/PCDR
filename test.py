@@ -83,8 +83,8 @@ def split_dataset(config):
     print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
     print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 20)]
     test_part = test_part.sample(frac=0.1, replace=False, weights='interaction_num_countdown')
+    test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 10)]
     print("测试集截断后数据量" + f"[{len(test_part)}]" )
     print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
     test_part.drop("interaction_num_countdown", axis=1, inplace=True)
@@ -164,7 +164,8 @@ def run_recbole(
     # trainer loading and initialization
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
-    model_file = "saved/DMCB-Jun-06-2023_17-38-07.pth"
+    model_file = None
+        # "saved/DMCB-Jun-06-2023_17-38-07.pth"
     # model training
     if model_file is None:
         best_valid_score, best_valid_result = trainer.fit(
@@ -200,7 +201,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", type=str, default="DMCB", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
+        "--dataset", "-d", type=str, default="jester", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(

@@ -57,5 +57,4 @@ interaction_level: 10
 # 使用用户信息里面的字段计算交互次数的等级， 比如男性在item上的交互次数或者 作家在item上的交互次数
 interaction_level_user_field: []
 
-load_inter_data_limit: ~
-inter_frequency_sample: [test_data]
+load_inter_data_limit: 500000
