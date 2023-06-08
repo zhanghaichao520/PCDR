@@ -76,6 +76,22 @@ class Collector(object):
         self.topk = self.config["topk"]
         self.device = self.config["device"]
 
+    def eval_data_collect(self, eval_data):
+        collect_key = "eval.data.interactions"
+        if self.register.need(collect_key):
+            item_id = self.config["ITEM_ID_FIELD"]
+            # 统计 eval 数据集中item的交互次数
+            dict = {}
+            if not dict.__contains__(collect_key):
+                self.data_struct.set(collect_key, dict)
+            dict = self.data_struct.get(collect_key)
+
+            for inter in eval_data.dataset.inter_feat[item_id]:
+                if not dict.__contains__(inter.item()):
+                    dict[inter.item()] = 0
+                dict[inter.item()] = dict[inter.item()] + 1
+            self.data_struct.set(collect_key, dict)
+
     def data_collect(self, train_data):
         """Collect the evaluation resource from training data.
         Args:
@@ -148,15 +164,15 @@ class Collector(object):
             positive_u(Torch.Tensor): the row index of positive items for each user.
             positive_i(Torch.Tensor): the positive item id for each user.
         """
-        if self.register.need("testdata.interactions"):
+        if self.register.need("eval.data.items"):
             item_id = self.config["ITEM_ID_FIELD"]
-            dict = {}
-            if self.data_struct.__contains__("testdata.interactions"):
-                dict = self.data_struct.get("testdata.interactions")
-            if not dict.__contains__(interaction[item_id]):
-                dict[interaction[item_id]] = 0
-            dict[interaction[item_id]] = dict[interaction[item_id]] + 1
-            self.data_struct.set("testdata.interactions", dict)
+            list = []
+            if self.data_struct.__contains__("eval.data.items"):
+                list = self.data_struct.get("eval.data.items")
+
+            if not list.__contains__(interaction[item_id].item()):
+                list.append(interaction[item_id].item())
+            self.data_struct.set("eval.data.items", list)
 
         if self.register.need("rec.items"):
 

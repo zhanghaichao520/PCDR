@@ -165,7 +165,6 @@ def run_recbole(
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
     model_file = None
-        # "saved/DMCB-Jun-06-2023_17-38-07.pth"
     # model training
     if model_file is None:
         best_valid_score, best_valid_result = trainer.fit(
@@ -201,7 +200,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", "-m", type=str, default="DMCB", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="jester", help="name of datasets"
+        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(

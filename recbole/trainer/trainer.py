@@ -588,6 +588,9 @@ class Trainer(AbstractTrainer):
             )
             self.logger.info(message_output)
 
+        # 收集全部的eval data
+        self.eval_collector.eval_data_collect(eval_data)
+
         self.model.eval()
 
         if isinstance(eval_data, FullSortEvalDataLoader):

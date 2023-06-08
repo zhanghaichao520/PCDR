@@ -40,26 +40,38 @@ class IOU(TopkMetric):
         分析去偏效果， 使用流行度推荐模型的结果和去偏推荐模型的结果做计算
         IOU = 2个结果的交集 /  2个结果的并集
     '''
-    metric_need = ["rec.items", "testdata.interactions"]
+    metric_need = ["rec.items", "eval.data.interactions", "eval.data.items"]
 
     def __init__(self, config):
         super().__init__(config)
 
     def calculate_metric(self, dataobject):
-        rec_mat = dataobject.get("rec.items")
-        test_iter = dataobject.get("testdata.interactions")
+        # eval数据集所有item的交互次数
+        eval_iteractions_num = dataobject.get("eval.data.interactions")
+        # eval数据集用于训练的item  （有采样）
+        eval_items = dataobject.get("eval.data.items")
+
+        topK_interactions = {}
+        for item in eval_items:
+            topK_interactions[item] = eval_iteractions_num[item]
         # get topk
-        a1 = sorted(test_iter.items(), key=lambda x: x[1], reverse=True)
+        topK_result = dict(sorted(topK_interactions.items(), key=lambda x: x[1], reverse=True))
+        topK_result = list(dict(topK_result).keys())[:max(self.topk)]
 
-        # pos_index, _ = self.used_info(dataobject)
-        # result = self.metric_info(pos_index)
-        # metric_dict = self.topk_result("iou", result)
-        # return metric_dict
-        print(rec_mat)
-    def metric_info(self, pos_index):
-        result = np.cumsum(pos_index, axis=1)
-        return (result > 0).astype(int)
+        # 模型推荐结果 item
+        rec_mat = dataobject.get("rec.items")
+        result = []
+        for user_result in rec_mat:
+            user_result = user_result.numpy().tolist()
+            iou = len(set(user_result).intersection(set(topK_result))) / len(set(user_result).union(set(topK_result)))
+            result.append(iou)
 
+        metric_dict = {}
+        for k in self.topk:
+            key = "{}@{}".format("iou", k)
+            metric_dict[key] = round(np.mean(result), self.decimal_place)
+
+        return metric_dict
 
 class Hit(TopkMetric):
     r"""HR_ (also known as truncated Hit-Ratio) is a way of calculating how many 'hits'
