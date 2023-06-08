@@ -480,8 +480,6 @@ class Dataset(torch.utils.data.Dataset):
                 raise ValueError(f"File {inter_feat_path} not exist.")
 
             inter_feat = self._load_feat(inter_feat_path, FeatureSource.INTERACTION)
-            if self.config["load_inter_data_limit"] is not None:
-                inter_feat = inter_feat.sample(n=max(self.config["load_inter_data_limit"], len(inter_feat)))
             self.logger.debug(
                 f"Interaction feature loaded successfully from [{inter_feat_path}]."
             )
