@@ -170,8 +170,9 @@ class Collector(object):
             if self.data_struct.__contains__("eval.data.items"):
                 list = self.data_struct.get("eval.data.items")
 
-            if not list.__contains__(interaction[item_id].item()):
-                list.append(interaction[item_id].item())
+            for inter in interaction[item_id]:
+                if not list.__contains__(inter.item()):
+                    list.append(inter.item())
             self.data_struct.set("eval.data.items", list)
 
         if self.register.need("rec.items"):
