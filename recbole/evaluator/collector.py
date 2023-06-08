@@ -76,6 +76,10 @@ class Collector(object):
         self.topk = self.config["topk"]
         self.device = self.config["device"]
 
+    def test_data_collect(self, test_data):
+        if self.register.need("testdata.interactions"):
+            item_id = self.config["ITEM_ID_FIELD"]
+            self.data_struct.set("testdata.interactions", test_data.dataset.inter_feat)
     def data_collect(self, train_data):
         """Collect the evaluation resource from training data.
         Args:
@@ -91,7 +95,7 @@ class Collector(object):
         if self.register.need("data.count_items"):
             self.data_struct.set("data.count_items", train_data.dataset.item_counter)
         if self.register.need("data.count_users"):
-            self.data_struct.set("data.count_items", train_data.dataset.user_counter)
+            self.data_struct.set("data.count_users", train_data.dataset.user_counter)
 
     def _average_rank(self, scores):
         """Get the ranking of an ordered tensor, and take the average of the ranking for positions with equal values.

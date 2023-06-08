@@ -55,5 +55,3 @@ divide_bucket:
 
 # 按照交互次数设置等级
 interaction_level: 10
-# 使用用户信息里面的字段计算交互次数的等级， 比如男性在item上的交互次数或者 作家在item上的交互次数
-interaction_level_user_field: []

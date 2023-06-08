@@ -578,6 +578,8 @@ class Trainer(AbstractTrainer):
         if not eval_data:
             return
 
+        self.eval_collector.test_data_collect(eval_data)
+
         if load_best_model:
             checkpoint_file = model_file or self.saved_model_file
             checkpoint = torch.load(checkpoint_file, map_location=self.device)

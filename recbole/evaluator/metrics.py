@@ -35,6 +35,28 @@ from recbole.utils import EvaluatorType
 
 # TopK Metrics
 
+class IOU(TopkMetric):
+    '''
+        分析去偏效果， 使用流行度推荐模型的结果和去偏推荐模型的结果做计算
+        IOU = 2个结果的交集 /  2个结果的并集
+    '''
+    metric_need = ["rec.items", "testdata.interactions"]
+
+    def __init__(self, config):
+        super().__init__(config)
+
+    def calculate_metric(self, dataobject):
+        rec_mat = dataobject.get("rec.items")
+
+        # pos_index, _ = self.used_info(dataobject)
+        # result = self.metric_info(pos_index)
+        # metric_dict = self.topk_result("iou", result)
+        # return metric_dict
+        print(rec_mat)
+    def metric_info(self, pos_index):
+        result = np.cumsum(pos_index, axis=1)
+        return (result > 0).astype(int)
+
 
 class Hit(TopkMetric):
     r"""HR_ (also known as truncated Hit-Ratio) is a way of calculating how many 'hits'
