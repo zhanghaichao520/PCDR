@@ -76,10 +76,6 @@ class Collector(object):
         self.topk = self.config["topk"]
         self.device = self.config["device"]
 
-    def test_data_collect(self, test_data):
-        if self.register.need("testdata.interactions"):
-            item_id = self.config["ITEM_ID_FIELD"]
-            self.data_struct.set("testdata.interactions", test_data.dataset.inter_feat)
     def data_collect(self, train_data):
         """Collect the evaluation resource from training data.
         Args:
@@ -152,6 +148,16 @@ class Collector(object):
             positive_u(Torch.Tensor): the row index of positive items for each user.
             positive_i(Torch.Tensor): the positive item id for each user.
         """
+        if self.register.need("testdata.interactions"):
+            item_id = self.config["ITEM_ID_FIELD"]
+            dict = {}
+            if self.data_struct.__contains__("testdata.interactions"):
+                dict = self.data_struct.get("testdata.interactions")
+            if not dict.__contains__(interaction[item_id]):
+                dict[interaction[item_id]] = 0
+            dict[interaction[item_id]] = dict[interaction[item_id]] + 1
+            self.data_struct.set("testdata.interactions", dict)
+
         if self.register.need("rec.items"):
 
             # get topk

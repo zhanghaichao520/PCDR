@@ -34,7 +34,7 @@ from recbole.utils.url import (
 def copy_file(config, source_dataset_path, target_dataset_path, token, file_type):
     filepath = os.path.join(source_dataset_path, f"{token}.{file_type}")
     if not os.path.isfile(filepath):
-        raise ValueError(f"File {filepath} not exist.")
+        return
     field_separator = config["field_separator"]
     encoding = config["encoding"]
     df = pd.read_csv(

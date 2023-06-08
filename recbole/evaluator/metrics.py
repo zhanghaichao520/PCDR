@@ -47,6 +47,9 @@ class IOU(TopkMetric):
 
     def calculate_metric(self, dataobject):
         rec_mat = dataobject.get("rec.items")
+        test_iter = dataobject.get("testdata.interactions")
+        # get topk
+        a1 = sorted(test_iter.items(), key=lambda x: x[1], reverse=True)
 
         # pos_index, _ = self.used_info(dataobject)
         # result = self.metric_info(pos_index)
