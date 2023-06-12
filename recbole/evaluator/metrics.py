@@ -40,6 +40,8 @@ class IOU(TopkMetric):
         分析去偏效果， 使用流行度推荐模型的结果和去偏推荐模型的结果做计算
         IOU = 2个结果的交集 /  2个结果的并集
     '''
+    smaller = True
+
     metric_need = ["rec.items", "eval.data.interactions", "eval.data.items"]
 
     def __init__(self, config):
@@ -53,8 +55,9 @@ class IOU(TopkMetric):
 
         topK_interactions = {}
         for item in eval_items:
-            topK_interactions[item] = eval_iteractions_num[item]
-        # get topk
+            if eval_iteractions_num.__contains__(item):
+                topK_interactions[item] = eval_iteractions_num[item]
+        # get 流行度较高的item topk
         topK_result = dict(sorted(topK_interactions.items(), key=lambda x: x[1], reverse=True))
         topK_result = list(dict(topK_result).keys())[:max(self.topk)]
 

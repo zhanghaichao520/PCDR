@@ -55,3 +55,4 @@ divide_bucket:
 
 # 按照交互次数设置等级
 interaction_level: 10
+load_inter_data_limit: ~

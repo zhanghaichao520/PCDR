@@ -83,8 +83,8 @@ def split_dataset(config):
     print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
     print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    test_part = test_part.sample(frac=0.4, replace=False, weights='interaction_num_countdown')
-    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 1) & ( 1 / test_part["interaction_num_countdown"] <= 10)]
+    test_part = test_part.sample(frac=0.8, replace=False, weights='interaction_num_countdown')
+    test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 300) & ( 1 / test_part["interaction_num_countdown"] <= 600)]
     print("测试集截断后数据量" + f"[{len(test_part)}]" )
     print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
     test_part.drop("interaction_num_countdown", axis=1, inplace=True)
@@ -168,7 +168,11 @@ def run_recbole(
     # trainer loading and initialization
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
+    # model_file = "saved/DICE-Jun-09-2023_18-01-18.pth"
+    # model_file = "saved/CausE-Jun-09-2023_18-01-23.pth"
+    # model_file = "saved/DMCB-Jun-09-2023_16-56-15.pth"
     model_file = None
+
     # model training
     if model_file is None:
         best_valid_score, best_valid_result = trainer.fit(
@@ -195,14 +199,11 @@ def run_recbole(
     if model_file is None:
         logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
     logger.info(set_color("test result", "yellow") + f": {test_result}")
-    logger.info(set_color("测试集数据: ", "pink") + f"[{len(test_data.dataset)}]")
-    logger.info(set_color("测试集数据占比: ", "pink") + f"[{len(test_data.dataset) / len(dataset)}]")
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="DMCB", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="REL_MF", help="name of models")
     parser.add_argument(
         "--dataset", "-d", type=str, default="ml-100k", help="name of datasets"
     )
