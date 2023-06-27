@@ -39,7 +39,7 @@ unused_col: ~                   # (dict) The suffix of atomic files: (list) fiel
 rm_dup_inter: ~                 # (str) Whether to remove duplicated user-item interactions.
 val_interval: ~                 # (dict) Filter inter by values in {value field (str): interval (str)}.
 filter_inter_by_user_or_item: False    # (bool) Whether or not to filter inter by user or item.
-user_inter_num_interval: [5,20]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+user_inter_num_interval: [1,20]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
 item_inter_num_interval: ~     # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
 
 # Preprocessing
@@ -57,4 +57,4 @@ interaction_level: 10
 # 使用用户信息里面的字段计算交互次数的等级， 比如男性在item上的交互次数或者 作家在item上的交互次数
 interaction_level_user_field: []
 
-load_inter_data_limit: 500000
+load_inter_data_limit: 120000

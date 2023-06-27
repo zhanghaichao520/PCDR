@@ -33,10 +33,9 @@ class DMCB(DebiasedRecommender):
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight0 = 0.001
-        self.weight1 = 0.3
-        self.weight2 = 1
-        self.weight3 = 1
+        self.weight1 = 0.4
+        self.weight2 = 3
+        self.weight3 = 3
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_age_embedding = nn.Embedding(self.n_users, self.embedding_size)
@@ -254,7 +253,7 @@ class DMCB(DebiasedRecommender):
         total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3),   sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
@@ -275,7 +274,7 @@ class DMCB(DebiasedRecommender):
 
         Y1 = torch.matmul(((Yd * Ms) + (1 - Yd) * Mt), all_item_e.transpose(0, 1))  # [user_num,item_num]
         Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
-        # Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
         # for list in Ms.numpy().tolist():
         #     self.Ms_data.append(list)
