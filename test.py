@@ -78,16 +78,16 @@ def split_dataset(config):
         else:
             inter_fre_list.append(1 / item_inter_num[item])
     test_part[colname_interaction_num_countdown] = inter_fre_list
-    test_part = test_part.sample(frac=0.2, replace=False)
-    # test_part = test_part.sample(frac=0.5, replace=False, weights='interaction_num_countdown')
+    # test_part = test_part.sample(frac=0.2, replace=False)
+    test_part = test_part.sample(frac=0.2, replace=False, weights='interaction_num_countdown')
 
     test_data_total_num = len(test_part)
     print("测试集 数据量" + f"[{test_data_total_num}]" )
     print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
     print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 8) & ( 1 / test_part["interaction_num_countdown"] <= 10)]
-    print("测试集截断后数据量" + f"[{len(test_part)}]" )
+    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 10) & ( 1 / test_part["interaction_num_countdown"] <= 1000)]
+    print("测试集截断后数据量" + f"[{len(test_part)}]")
     print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
     test_part.drop("interaction_num_countdown", axis=1, inplace=True)
 
@@ -173,6 +173,7 @@ def run_recbole(
     # model_file = "saved/DICE-Jun-09-2023_18-01-18.pth"
     # model_file = "saved/CausE-Jun-09-2023_18-01-23.pth"
     # model_file = "saved/DMCB-Jun-09-2023_16-56-15.pth"
+    # model_file = "saved/DCCL-Jul-03-2023_10-41-27.pth"
     model_file = None
 
     # model training
@@ -205,9 +206,9 @@ def run_recbole(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="DICE", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="DCCL", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
+        "--dataset", "-d", type=str, default="jester", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(
