@@ -38,6 +38,7 @@ class DCCL(DebiasedRecommender):
 
         self.apply(xavier_normal_initialization)
 
+
     def pop_func(self, pop_tensor, pop_coeff):
         pop_tensor = torch.multiply(pop_tensor, pop_coeff)
         pop_tensor = torch.where(pop_tensor >= 1.0, torch.ones_like(pop_tensor), pop_tensor)
@@ -140,12 +141,14 @@ class DCCL(DebiasedRecommender):
             der = torch.sum(torch.tensor(der_pred), dim=-1,  keepdim=False) + 1e-1
         else:
             der = torch.sum(y_pred, dim=-1, keepdim=False) + 1e-1
-        loss = -torch.log(torch.div(ner, der))
+        loss = -torch.log(torch.div(ner, der) + 1e-12)
         if mask is None:
             pass
         else:
             loss = loss * mask
         loss = torch.sum(loss)
+        if torch.isnan(loss):
+            return 0
         return loss
 
     def calculate_loss(self, interaction):

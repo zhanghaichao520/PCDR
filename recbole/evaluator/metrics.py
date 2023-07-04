@@ -32,7 +32,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from recbole.evaluator.utils import _binary_clf_curve
 from recbole.evaluator.base_metric import AbstractMetric, TopkMetric, LossMetric
 from recbole.utils import EvaluatorType
-
+import torch
 # TopK Metrics
 
 class IOU(TopkMetric):
@@ -51,26 +51,28 @@ class IOU(TopkMetric):
         # eval数据集所有item的交互次数
         eval_iteractions_num = dataobject.get("eval.data.interactions")
         # eval数据集用于训练的item  （有采样）
-        eval_items = dataobject.get("eval.data.items")
+        # eval_items = dataobject.get("eval.data.items")
 
-        topK_interactions = {}
-        for item in eval_items:
-            if eval_iteractions_num.__contains__(item):
-                topK_interactions[item] = eval_iteractions_num[item]
+        # topK_interactions = {}
+        # for item in eval_items:
+        #     if eval_iteractions_num.__contains__(item):
+        #         topK_interactions[item] = eval_iteractions_num[item]
         # get 流行度较高的item topk
-        topK_result = dict(sorted(topK_interactions.items(), key=lambda x: x[1], reverse=True))
-        topK_result = list(dict(topK_result).keys())[:50]
+        topK_result = dict(sorted(eval_iteractions_num.items(), key=lambda x: x[1], reverse=True))
+        topK_result = list(dict(topK_result).keys())[:300]
 
         # 模型推荐结果 item
         rec_mat = dataobject.get("rec.items")
-        result = []
-        for user_result in rec_mat:
-            user_result = user_result.numpy().tolist()
-            iou = len(set(user_result).intersection(set(topK_result))) / len(set(user_result))
-            result.append(iou)
 
         metric_dict = {}
         for k in self.topk:
+            result = []
+            for user_result in rec_mat:
+                user_result = user_result.numpy().tolist()
+                user_result = user_result[:k]
+                iou = len(set(user_result).intersection(set(topK_result))) / len(set(user_result))
+                result.append(iou)
+
             key = "{}@{}".format("iou", k)
             metric_dict[key] = round(np.mean(result), self.decimal_place)
 
@@ -701,6 +703,30 @@ class GiniIndex(AbstractMetric):
             )
         return metric_dict
 
+    def calculate_gini(self, item_matrix, num_items):
+        # Flatten the item matrix to a 1D array
+        items = item_matrix.flatten()
+
+        # Sort the items in ascending order
+        sorted_items = np.sort(items)
+
+        # Calculate the cumulative sum of item frequencies
+        cumulative_sum = np.cumsum(sorted_items)
+
+        # Calculate the Lorenz curve values
+        lorenz_curve = cumulative_sum / np.sum(items)
+
+        # Calculate the area under the Lorenz curve
+        area_lorenz = np.sum(lorenz_curve[:-1] + lorenz_curve[1:]) / 2.0
+
+        # Calculate the area of the perfect equality curve
+        area_perfect_eq = np.linspace(0, 1, len(sorted_items) + 1)
+        area_perfect_eq = np.sum(area_perfect_eq[:-1] + area_perfect_eq[1:]) / 2.0
+
+        # Calculate the Gini coefficient
+        gini_coefficient = (area_perfect_eq - area_lorenz) / area_perfect_eq
+
+        return gini_coefficient
     def get_gini(self, item_matrix, num_items):
         """Get gini index through the top-k recommendation list.
 

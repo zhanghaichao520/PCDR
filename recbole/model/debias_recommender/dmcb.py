@@ -33,9 +33,9 @@ class DMCB(DebiasedRecommender):
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight1 = 0.4
-        self.weight2 = 3
-        self.weight3 = 3
+        self.weight1 = 1
+        self.weight2 = 38
+        self.weight3 = 2
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_age_embedding = nn.Embedding(self.n_users, self.embedding_size)
@@ -284,5 +284,5 @@ class DMCB(DebiasedRecommender):
         #     self.Cs_data.append(list)
         # for list in Ct.numpy().tolist():
         #     self.Ct_data.append(list)
-        return Y1.view(-1)
+        return Y2.view(-1)
 
