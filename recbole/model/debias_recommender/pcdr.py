@@ -25,16 +25,17 @@ class ReverseLayerF(Function):
         output = grad_output.neg() * ctx.alpha
         return output, None
 
-class DMCB(DebiasedRecommender):
+class PCDR(DebiasedRecommender):
     input_type = InputType.PAIRWISE
 
     def __init__(self, config, dataset):
-        super(DMCB, self).__init__(config, dataset)
+        super(PCDR, self).__init__(config, dataset)
 
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight1 = 1
-        self.weight2 = 38
+        self.weight0 = 1
+        self.weight1 = 0.4
+        self.weight2 = 2
         self.weight3 = 2
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
@@ -52,30 +53,38 @@ class DMCB(DebiasedRecommender):
         self.loss = BPRLoss()
 
         self.matching_network = nn.Sequential(
-            nn.Linear(64, 128),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
             nn.ReLU(),
-            nn.Linear(64, 128),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
             nn.ReLU()
         )
         self.conformity_network = nn.Sequential(
-            nn.Linear(64, 128),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
+            nn.ReLU(),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
+            nn.ReLU(),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
             nn.ReLU()
         )
         self.item_network = nn.Sequential(
-            nn.Linear(64, 128),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
+            nn.ReLU(),
+            nn.Linear(self.embedding_size, self.embedding_size * 2),
+            nn.ReLU(),
+            nn.Linear(self.embedding_size * 2, self.embedding_size),
             nn.ReLU()
         )
 
         self.domain_classfier = nn.Sequential(
-            nn.Linear(64, 1),
+            nn.Linear(self.embedding_size, 1),
             nn.Sigmoid()
         )
 
@@ -90,7 +99,7 @@ class DMCB(DebiasedRecommender):
         self.Ct_data = []
     def get_user_embedding(self, interaction):
         id_embedding = self.user_id_embedding(interaction[self.USER_ID])
-        # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.int64))
+        # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.intself.embedding_size))
         # gender_embedding = self.user_gender_embedding(interaction["gender"])
         # occupation_embedding = self.user_occupation_embedding(interaction["occupation"])
         # return (id_embedding + age_embedding + gender_embedding + occupation_embedding) / 4
@@ -142,9 +151,9 @@ class DMCB(DebiasedRecommender):
             torch.FloatTensor: The embedding tensor of a batch of item, shape: [batch_size, embedding_size]
         """
         id_embedding = self.item_id_embedding(interaction[self.ITEM_ID])
-        # interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interaction_num_level"].to(torch.int64))
-        # gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.int64))
-        # gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.int64))
+        # interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interaction_num_level"].to(torch.intself.embedding_size))
+        # gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.intself.embedding_size))
+        # gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.intself.embedding_size))
         # return (id_embedding + interacion_num_level_embedding) / 2
         return id_embedding
     def forward(self, interaction):
@@ -169,13 +178,6 @@ class DMCB(DebiasedRecommender):
         dict["Ct"] = Ct
         dict["Iq"] = Iq
 
-        # compute cos simliair  kl_div
-        # Ms_Mt_simliar = torch.kl_div(Ms,Mt)
-        # Ms_Cs_simliar = torch.kl_div(Ms,Cs)
-        # Ms_Ct_simliar = torch.kl_div(Ms,Ct)
-        # Mt_Cs_simliar = torch.kl_div(Mt,Cs)
-        # Mt_Ct_simliar = torch.kl_div(Mt,Ct)
-
         Ms_Mt_simliar = torch.cosine_similarity(Ms, Mt)
         Ms_Cs_simliar = torch.cosine_similarity(Ms, Cs)
         Ms_Ct_simliar = torch.cosine_similarity(Ms, Ct)
@@ -194,7 +196,7 @@ class DMCB(DebiasedRecommender):
 
         Y1 = ((Iq * ((Yd * Ms) + (1 - Yd) * Mt))).sum(dim = 1)
         Y2 = ((Iq * ((Yd * Cs) + (1 - Yd) * Ct))).sum(dim = 1)
-        Y3 = ((Iq * ((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)))).sum(dim = 1)
+        Y3 = ((Iq * ((Yd * (Ms + Cs)) + (1 - Yd) * (Mt + Ct)))).sum(dim = 1)
 
         dict["Y1_predict"] = Y1
         dict["Y2_predict"] = Y2
@@ -240,7 +242,6 @@ class DMCB(DebiasedRecommender):
         sim_loss2 = (torch.exp(dict["Ms_Cs_simliar"]) + torch.exp(dict["Ms_Ct_simliar"]) + torch.exp(dict["Mt_Cs_simliar"]) + torch.exp(dict["Mt_Ct_simliar"]))
         sim_loss2 = sim_loss2.sum(dim = 0) / len(interaction)
 
-
         causal_loss = torch.log(1 + torch.exp( (dict["Iq"] * dict["Ms"]).sum(dim=1) - (dict["Iq"] * dict["Mt"]).sum(dim=1)))
         causal_loss = causal_loss.sum(dim=0) / len(interaction)
 
@@ -250,10 +251,10 @@ class DMCB(DebiasedRecommender):
         domain_loss = bce_loss(dict["domin_network_Cs"], d1) + bce_loss(dict["domin_network_Ct"], d0) \
                       + bce_loss(dict["domin_network_Ms"], d1) + bce_loss(dict["domin_network_Mt"], d0)
         domain_loss = domain_loss / 4
-        total_loss = bce_loss1 + bce_loss2 + bce_loss3 + sim_loss1 * self.weight1 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
+        total_loss = (bce_loss1 + bce_loss2 + bce_loss3) * self.weight0 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
                      + domain_loss * self.weight3
         # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3),  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+        return ((bce_loss1 + bce_loss2 + bce_loss3) * self.weight0,  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):
@@ -274,7 +275,7 @@ class DMCB(DebiasedRecommender):
 
         Y1 = torch.matmul(((Yd * Ms) + (1 - Yd) * Mt), all_item_e.transpose(0, 1))  # [user_num,item_num]
         Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
-        Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt +Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt + Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
         # for list in Ms.numpy().tolist():
         #     self.Ms_data.append(list)
@@ -284,5 +285,5 @@ class DMCB(DebiasedRecommender):
         #     self.Cs_data.append(list)
         # for list in Ct.numpy().tolist():
         #     self.Ct_data.append(list)
-        return Y2.view(-1)
+        return Y1.view(-1)
 

@@ -84,9 +84,9 @@ def split_dataset(config):
     print("测试集 item交互频率最大值" + f"[{np.max(list(item_inter_num.values()))}]" )
     print("测试集 item交互频率最小值" + f"[{np.min(list(item_inter_num.values()))}]" )
 
-    # test_part = test_part.sample(frac=0.2, replace=False)
-    # test_part = test_part.sample(frac=0.8, replace=False, weights='interaction_num_countdown')
-    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 10) & ( 1 / test_part["interaction_num_countdown"] <= 100)]
+    # test_part = test_part[(1 / test_part["interaction_num_countdown"] >= 100) & ( 1 / test_part["interaction_num_countdown"] <= 250)]
+    test_part = test_part.sample(frac=0.6)
+    # test_part = test_part.sample(frac=0.6,  replace=False, weights='interaction_num_countdown')
     print("测试集截断后数据量" + f"[{len(test_part)}]")
     print("测试集截取数据占比：" + f"[{len(test_part) / test_data_total_num}]")
     test_part.drop("interaction_num_countdown", axis=1, inplace=True)
@@ -174,11 +174,15 @@ def run_recbole(
     # trainer loading and initialization
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
-    # model_file = "saved/DICE-Jun-09-2023_18-01-18.pth"
-    # model_file = "saved/CausE-Jun-09-2023_18-01-23.pth"
-    # model_file = "saved/DMCB-Jun-09-2023_16-56-15.pth"
-    # model_file = "saved/DICE-Jul-03-2023_19-43-33.pth"
     model_file = None
+    # model_file = "saved/DICE-Jun-09-2023_18-01-18.pth"
+    # if config["model"] == ("DCCL"):
+    #     model_file = "saved/DCCL-Jul-15-2023_10-10-21.pth"
+    # if config["model"] == ("DMCB"):
+    #     model_file = "saved/DMCB-Jul-15-2023_10-10-18.pth"
+    # if config["model"] == ("MACR"):
+    #     model_file = "saved/MACR-Jul-15-2023_10-10-25.pth"
+
 
     # model training
     if model_file is None:
@@ -210,7 +214,7 @@ def run_recbole(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="DMCB", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="PCDR", help="name of models")
     parser.add_argument(
         "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
     )

@@ -59,7 +59,7 @@ class IOU(TopkMetric):
         #         topK_interactions[item] = eval_iteractions_num[item]
         # get 流行度较高的item topk
         topK_result = dict(sorted(eval_iteractions_num.items(), key=lambda x: x[1], reverse=True))
-        topK_result = list(dict(topK_result).keys())[:300]
+        topK_result = list(dict(topK_result).keys())[:200]
 
         # 模型推荐结果 item
         rec_mat = dataobject.get("rec.items")

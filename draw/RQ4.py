@@ -8,7 +8,7 @@ import matplotlib
 # matplotlib.rcParams['axes.unicode_minus']=False
 matplotlib.rcParams.update({'font.size': 40})
 # white, whitegrid
-sns.set_theme(style="white",font='Times New Roman',font_scale=3.5)
+sns.set_theme(style="whitegrid",font='Times New Roman',font_scale=3.5)
 
 data = pd.read_csv(r'~/Desktop/RQ4.csv')
 #设定画布。dpi越大图越清晰，绘图时间越久
