@@ -17,7 +17,7 @@ from recbole.quick_start import load_data_and_model
 
 if __name__ == "__main__":
     config, model, dataset, train_data, valid_data, test_data = load_data_and_model(
-        model_file="../saved/BPR-Aug-20-2021_03-32-13.pth",
+        model_file="../saved_model_ml-1m/BPR-Aug-20-2021_03-32-13.pth",
     )  # Here you can replace it by your model path.
 
     # uid_series = np.array([1, 2])  # internal user id series

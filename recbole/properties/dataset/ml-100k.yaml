@@ -9,7 +9,7 @@ RATING_FIELD: rating            # (str) Field name of rating feature.
 TIME_FIELD: timestamp           # (str) Field name of timestamp feature.
 seq_len: ~                      # (dict) Field name of sequence feature: maximum length of each sequence
 LABEL_FIELD: label              # (str) Expected field name of the generated labels for point-wise dataLoaders. 
-threshold: {"rating":3}                    # (dict) 0/1 labels will be generated according to the pairs.
+threshold: {"rating":4}                    # (dict) 0/1 labels will be generated according to the pairs.
 NEG_PREFIX: neg_                # (str) Negative sampling prefix for pair-wise dataLoaders.
 
 # Sequential Model Needed
@@ -39,8 +39,8 @@ unused_col: ~                   # (dict) The suffix of atomic files: (list) fiel
 rm_dup_inter: ~                 # (str) Whether to remove duplicated user-item interactions.
 val_interval: ~                 # (dict) Filter inter by values in {value field (str): interval (str)}.
 filter_inter_by_user_or_item: True    # (bool) Whether or not to filter inter by user or item.
-user_inter_num_interval: [1,2000]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
-item_inter_num_interval: ~     # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+user_inter_num_interval: [20,200]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+item_inter_num_interval: [20,200]     # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
 
 # Preprocessing
 alias_of_user_id: ~             # (list) Fields' names remapped into the same index system with USER_ID_FIELD.

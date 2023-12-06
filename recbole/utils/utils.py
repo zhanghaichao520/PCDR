@@ -53,12 +53,7 @@ def ensure_dir(dir_path):
 def get_model(model_name):
     model_submodule = [
         "general_recommender",
-        "context_aware_recommender",
-        "sequential_recommender",
-        "knowledge_aware_recommender",
         "debias_recommender",
-        "exlib_recommender",
-
     ]
     r"""Automatically select model class based on model name
 

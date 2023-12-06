@@ -2,7 +2,16 @@ from recbole.model.debias_recommender.macr import MACR
 from recbole.model.debias_recommender.pcdr import PCDR
 from recbole.model.debias_recommender.mf import MF
 from recbole.model.debias_recommender.cause import CausE
+from recbole.model.debias_recommender.cause_mf import CausE_MF
+from recbole.model.debias_recommender.cause_lgn import CausE_LGN
 from recbole.model.debias_recommender.dice import DICE
+from recbole.model.debias_recommender.dice_mf import DICE_MF
+from recbole.model.debias_recommender.dice_lgn import DICE_LGN
 from recbole.model.debias_recommender.mf_ips import MF_IPS
 from recbole.model.debias_recommender.pda import PDA
 from recbole.model.debias_recommender.rel_mf import REL_MF
+from recbole.model.debias_recommender.pcdr_mf import PCDR_MF
+from recbole.model.debias_recommender.pcdr_lgn import PCDR_LGN
+from recbole.model.debias_recommender.macr_mf import MACR_MF
+from recbole.model.debias_recommender.macr_lgn import MACR_LGN
+from recbole.model.debias_recommender.ips_lgn import IPS_LGN

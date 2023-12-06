@@ -10,7 +10,7 @@ matplotlib.rcParams.update({'font.size': 40})
 # white, whitegrid
 sns.set_theme(style="whitegrid",font='Times New Roman',font_scale=3.5)
 
-data = pd.read_csv(r'~/Desktop/RQ4.csv')
+data = pd.read_csv(r'~/Desktop/PCDR/RQ4.csv')
 #设定画布。dpi越大图越清晰，绘图时间越久
 fig=plt.figure(figsize=(14, 9), dpi=100)
 ax1=fig.add_subplot(111)                     # 设置绘图区

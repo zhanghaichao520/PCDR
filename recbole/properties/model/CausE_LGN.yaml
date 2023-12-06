@@ -1,0 +1,9 @@
+embedding_size: 64
+
+dis_pen: 100
+lambda_1: 1
+lambda_2: 1
+
+INTERVENE_MASK: popular
+LABEL: label
+data_sample: 0.4

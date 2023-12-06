@@ -167,6 +167,29 @@ class Interaction(object):
     def __repr__(self):
         return self.__str__()
 
+    def inverse_sample_item(self, radio):
+        # 计算 item_id 中每个元素的出现次数
+        item_id = self.interaction['item_id']
+        counts = torch.bincount(item_id)
+
+        # 计算采样概率（出现次数的倒数）
+        probabilities = 1.0 / counts[item_id]
+        # 正规化概率，使其和为1
+        probabilities /= probabilities.sum()
+        # 按照概率采样，得到要保留的索引
+        sampled_indices = np.random.choice(len(item_id), size=int(len(item_id) * radio), replace=False,
+                                           p=probabilities.numpy())
+        # 使用布尔索引创建一个掩码，表示哪些索引将被保留
+        mask = np.zeros(len(item_id), dtype=bool)
+        mask[sampled_indices] = True
+
+        # 更新字典中的每个值，只保留采样的索引
+        for key in self.interaction:
+            self.interaction[key] = self.interaction[key][torch.tensor(mask)]
+
+        self.length = -1
+        for k in self.interaction:
+            self.length = max(self.length, self.interaction[k].unsqueeze(-1).shape[0])
     @property
     def columns(self):
         """

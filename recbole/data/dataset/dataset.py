@@ -1902,6 +1902,8 @@ class Dataset(torch.utils.data.Dataset):
 
         self._drop_unused_col()
         next_df = [self.inter_feat[index] for index in next_index]
+        # test set unbias sample
+        next_df[2].inverse_sample_item(self.config["data_sample"])
         next_ds = [self.copy(_) for _ in next_df]
         return next_ds
 

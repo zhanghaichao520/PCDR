@@ -27,27 +27,27 @@ def save_example():
 def load_example():
     # Filtered dataset and split dataloaders are created according to 'config'.
     config, model, dataset, train_data, valid_data, test_data = load_data_and_model(
-        model_file="../saved/BPR-Aug-20-2021_03-32-13.pth",
+        model_file="../saved_model_ml-1m/BPR-Aug-20-2021_03-32-13.pth",
     )
 
     # Filtered dataset is loaded from file, and split dataloaders are created according to 'config'.
     config, model, dataset, train_data, valid_data, test_data = load_data_and_model(
-        model_file="../saved/BPR-Aug-20-2021_03-32-13.pth",
-        dataset_file="../saved/ml-100k-dataset.pth",
+        model_file="../saved_model_ml-1m/BPR-Aug-20-2021_03-32-13.pth",
+        dataset_file="../saved_model_ml-1m/ml-100k-dataset.pth",
     )
 
     # Dataset is neither created nor loaded, and split dataloaders are loaded from file.
     config, model, dataset, train_data, valid_data, test_data = load_data_and_model(
-        model_file="../saved/BPR-Aug-20-2021_03-32-13.pth",
-        dataloader_file="../saved/ml-100k-for-BPR-dataloader.pth",
+        model_file="../saved_model_ml-1m/BPR-Aug-20-2021_03-32-13.pth",
+        dataloader_file="../saved_model_ml-1m/ml-100k-for-BPR-dataloader.pth",
     )
     assert dataset is None
 
     # Filtered dataset and split dataloaders are loaded from file.
     config, model, dataset, train_data, valid_data, test_data = load_data_and_model(
-        model_file="../saved/BPR-Aug-20-2021_03-32-13.pth",
-        dataset_file="../saved/ml-100k-dataset.pth",
-        dataloader_file="../saved/ml-100k-for-BPR-dataloader.pth",
+        model_file="../saved_model_ml-1m/BPR-Aug-20-2021_03-32-13.pth",
+        dataset_file="../saved_model_ml-1m/ml-100k-dataset.pth",
+        dataloader_file="../saved_model_ml-1m/ml-100k-for-BPR-dataloader.pth",
     )
 
 

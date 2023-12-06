@@ -30,7 +30,6 @@ class PCDR(DebiasedRecommender):
 
     def __init__(self, config, dataset):
         super(PCDR, self).__init__(config, dataset)
-
         # load parameters info
         self.embedding_size = config["embedding_size"]
         self.weight0 = 1
@@ -43,13 +42,11 @@ class PCDR(DebiasedRecommender):
         self.user_gender_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_occupation_embedding = nn.Embedding(self.n_users, self.embedding_size)
 
-        #
         self.item_id_embedding = nn.Embedding(self.n_items, self.embedding_size)
         self.item_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
         self.item_gender_M_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
         self.item_gender_F_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
 
-        #todo
         self.loss = BPRLoss()
 
         self.matching_network = nn.Sequential(
@@ -75,12 +72,9 @@ class PCDR(DebiasedRecommender):
         self.item_network = nn.Sequential(
             nn.Linear(self.embedding_size, self.embedding_size * 2),
             nn.ReLU(),
-            nn.Linear(self.embedding_size * 2, self.embedding_size),
+            nn.Linear(self.embedding_size * 2, self.embedding_size * 4),
             nn.ReLU(),
-            nn.Linear(self.embedding_size, self.embedding_size * 2),
-            nn.ReLU(),
-            nn.Linear(self.embedding_size * 2, self.embedding_size),
-            nn.ReLU()
+            nn.Linear(self.embedding_size * 4, self.embedding_size),
         )
 
         self.domain_classfier = nn.Sequential(
@@ -124,7 +118,6 @@ class PCDR(DebiasedRecommender):
 
     def get_user_unpopular_embedding(self, interaction):
         r"""Get a batch of user embedding tensor according to input user's id.
-
         Args:
             user (torch.LongTensor): The input tensor that contains user's id, shape: [batch_size, ]
 

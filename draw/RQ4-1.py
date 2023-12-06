@@ -3,15 +3,15 @@ import numpy as np
 import pandas as pd
 
 # 创建示例数据
-data1 = pd.read_csv(r'~/Desktop/RQ4-1.csv')
+data1 = pd.read_csv(r'~/Desktop/PCRD/RQ4-1.csv')
 x1 = data1["alpha"]
 y1 = data1["hit@20"]
 
-data2 = pd.read_csv(r'~/Desktop/RQ4-2.csv')
+data2 = pd.read_csv(r'~/Desktop/PCRD/RQ4-2.csv')
 x2 = data2["beta"]
 y2 = data2["hit@20"]
 
-data3 = pd.read_csv(r'~/Desktop/RQ4-3.csv')
+data3 = pd.read_csv(r'~/Desktop/PCDR/RQ4-3.csv')
 x3 = data3["delta"]
 y3 = data3["hit@20"]
 

@@ -10,7 +10,7 @@ matplotlib.rcParams.update({'font.size': 20})
 # white, whitegrid
 sns.set_theme(style="white",font='Times New Roman',font_scale=4)
 
-data = pd.read_csv(r'~/Desktop/ml-1m-IOU.csv')
+data = pd.read_csv(r'~/Desktop/PCDR/ml-1m-IOU.csv')
 
 data = data.T
 data = data.reset_index()
@@ -24,9 +24,8 @@ fig=plt.figure(figsize=(15, 12), dpi=100)
 # ax1=fig.add_subplot(111)                     # 设置绘图区
 
 
-sns.lineplot(x="topK", y="DMCB-matching", color="#1F77B4", lw=4, marker="*", markersize=15, data=data,  label="DMCB-matching")
-sns.lineplot(x="topK", y="DMCB-conformity", color="#FF7F0E", lw=4, marker="o", markersize=15, data=data,  label="DMCB-conformity")
-sns.lineplot(x="topK", y="DICE",  color="#2CA02C", lw=4, marker="h", markersize=15, data=data,  label="DICE")
+sns.lineplot(x="topK", y="PCDR-interest", color="#1F77B4", lw=4, marker="*", markersize=15, data=data,  label="PCDR-interest")
+sns.lineplot(x="topK", y="PCDR-conformity", color="#FF7F0E", lw=4, marker="o", markersize=15, data=data,  label="PCDR-conformity")
 sns.lineplot(x="topK", y="CausE",  color="#D62728", marker="h", markersize=15,  lw=4, data=data,  label="CausE")
 sns.lineplot(x="topK", y="DICE",  color="#9467BD", marker="h", markersize=15,  lw=4, data=data,  label="DICE")
 sns.lineplot(x="topK", y="DCCL",  color="#8C564B", marker="h", markersize=15,  lw=4, data=data,  label="DCCL")
