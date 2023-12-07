@@ -14,6 +14,8 @@ This requires NVIDIA driver version >= 396.26 (for Linux) or >= 397.44 (for Wind
 ### Install 
 ```bash
 pip install -e . --verbose
+pip install -r requirements.txt
+pip install ray[tune]
 ```
 
 ## Quick-Start

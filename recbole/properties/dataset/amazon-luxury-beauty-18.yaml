@@ -30,17 +30,15 @@ relation_kg_num_interval: ~     # (str) Relation interval for filtering kg, such
 # Selectively Loading
 load_col:                       # (dict) The suffix of atomic files: (list) field names to be loaded.
     inter: [user_id, item_id, rating]
-    user: [user_id]
-    item: [item_id]
 unload_col: ~                   # (dict) The suffix of atomic files: (list) field names NOT to be loaded.
 unused_col: ~                   # (dict) The suffix of atomic files: (list) field names which are loaded but not used.
 
 # Filtering
 rm_dup_inter: ~                 # (str) Whether to remove duplicated user-item interactions.
 val_interval: ~                 # (dict) Filter inter by values in {value field (str): interval (str)}.
-filter_inter_by_user_or_item: False    # (bool) Whether or not to filter inter by user or item.
-user_inter_num_interval: [5,20000]      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
-item_inter_num_interval: ~     # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+filter_inter_by_user_or_item: True    # (bool) Whether or not to filter inter by user or item.
+user_inter_num_interval: ~      # (str) User interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
+item_inter_num_interval: ~      # (str) Item interval for filtering inter, such as [A,B] / [A,B) / (A,B) / (A,B].
 
 # Preprocessing
 alias_of_user_id: ~             # (list) Fields' names remapped into the same index system with USER_ID_FIELD.
@@ -54,8 +52,4 @@ normalize_all: True            # (bool) Whether or not to normalize all the floa
 
 # 按照交互次数设置等级
 interaction_level: 10
-# 使用用户信息里面的字段计算交互次数的等级， 比如男性在item上的交互次数或者 作家在item上的交互次数
-interaction_level_user_field: []
-
-load_inter_data_limit: 200000
-inter_frequency_sample: []
+load_inter_data_limit: ~
