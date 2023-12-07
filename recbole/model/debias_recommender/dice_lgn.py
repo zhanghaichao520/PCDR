@@ -55,11 +55,18 @@ class DICE_LGN(DebiasedRecommender):
         self.apply(xavier_normal_initialization)
         if config["dataset"] == "ml-1m":
             print("base on LightGCN")
-            mf_model = torch.load("saved/LightGCN-Dec-05-2023_20-27-58.pth")
-            self.users_int.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-            self.users_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-            self.items_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
-            self.items_int.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+            base_model = torch.load("saved/LightGCN-Dec-05-2023_20-27-58.pth")
+            self.users_int.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.users_pop.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_pop.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_int.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+        if config["dataset"] == "netflix":
+            print("base on LightGCN, dataset netflix")
+            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            self.users_pop.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.users_int.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_int.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_pop.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
     def get_user_emb_total(self, user):
 

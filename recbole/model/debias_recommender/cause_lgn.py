@@ -51,10 +51,16 @@ class CausE_LGN(DebiasedRecommender):
         self.apply(xavier_normal_initialization)
         if config["dataset"] == "ml-1m":
             print("base on LightGCN")
-            mf_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
-            self.user_emb.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-            self.items_emb_treatment.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
-            self.items_emb_control.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+            base_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
+            self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+        if config["dataset"] == "netflix":
+            print("base on LightGCN, dataset netflix")
+            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
     def get_user_emb(self, user):
 
