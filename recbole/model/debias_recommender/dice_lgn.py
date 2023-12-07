@@ -9,6 +9,7 @@ DICE
 Reference:
     Yu Zheng et al. "Disentangling User Interest and Conformity for Recommendation with Causal Embedding" in WWW 2021
 """
+import os
 
 import torch
 import torch.nn as nn
@@ -53,16 +54,28 @@ class DICE_LGN(DebiasedRecommender):
 
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        if config["dataset"] == "ml-1m":
-            print("base on LightGCN")
-            base_model = torch.load("saved/LightGCN-Dec-05-2023_20-27-58.pth")
+        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-1m")
+            base_model = torch.load(base_model_file)
             self.users_int.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.users_pop.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.items_pop.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.items_int.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
-        if config["dataset"] == "netflix":
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
+        if config["dataset"] == "netflix" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset netflix")
-            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            base_model = torch.load(base_model_file)
+            self.users_pop.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.users_int.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_int.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_pop.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-03-27.pth"
+        if config["dataset"] == "amazon-luxury-beauty-18" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset amazon-luxury-beauty-18")
+            base_model = torch.load(base_model_file)
             self.users_pop.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.users_int.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.items_int.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)

@@ -2,6 +2,7 @@
 # @Time   : 2023/4/27
 # @Author : Haichao Zhang
 # @Email  : Haichao.Zhang22@student.xjtlu.edu.cn
+import os.path
 
 import torch
 import torch.nn as nn
@@ -37,21 +38,32 @@ class DCCL_LGN(DebiasedRecommender):
         self.iid_pop_emb_layer = nn.Embedding(self.n_items, self.embedding_size, padding_idx=0)
 
         self.apply(xavier_normal_initialization)
-        if config["dataset"] == "ml-1m":
-            print("base on LightGCN")
-            base_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
+        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-1m")
+            base_model = torch.load(base_model_file)
             self.uid_int_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.uid_conf_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.iid_pop_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.iid_cont_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
-        if config["dataset"] == "netflix":
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
+        if config["dataset"] == "netflix" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset netflix")
-            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            base_model = torch.load(base_model_file)
             self.uid_int_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.uid_conf_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.iid_cont_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.iid_pop_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-03-27.pth"
+        if config["dataset"] == "amazon-luxury-beauty-18" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset amazon-luxury-beauty-18")
+            base_model = torch.load(base_model_file)
+            self.uid_int_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.uid_conf_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.iid_cont_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.iid_pop_emb_layer.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
     def pop_func(self, pop_tensor, pop_coeff):
         pop_tensor = torch.multiply(pop_tensor, pop_coeff)

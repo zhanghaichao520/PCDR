@@ -4,4 +4,4 @@ user_loss_weight: 1e-3
 c: 0
 mlp_hidden_size: [32,1]
 dropout_prob: 0
-data_sample: 0.8
+data_sample: 0.6

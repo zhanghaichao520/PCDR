@@ -9,6 +9,7 @@ CausE
 Reference:
     Stephen Bonner et al. "Causal embeddings for recommendation" in RecSys 208
 """
+import os
 
 import torch
 import torch.nn as nn
@@ -49,15 +50,26 @@ class CausE_LGN(DebiasedRecommender):
 
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        if config["dataset"] == "ml-1m":
-            print("base on LightGCN")
-            base_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
+        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-1m")
+            base_model = torch.load(base_model_file)
             self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
-        if config["dataset"] == "netflix":
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
+        if config["dataset"] == "netflix" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset netflix")
             base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+            self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-03-27.pth"
+        if config["dataset"] == "amazon-luxury-beauty-18" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset amazon-luxury-beauty-18")
+            base_model = torch.load(base_model_file)
             self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)

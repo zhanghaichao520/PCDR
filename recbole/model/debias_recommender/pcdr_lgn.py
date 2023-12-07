@@ -2,6 +2,7 @@
 # @Time   : 2023/4/27
 # @Author : Haichao Zhang
 # @Email  : Haichao.Zhang22@student.xjtlu.edu.cn
+import os
 
 import torch
 import torch.nn as nn
@@ -79,14 +80,24 @@ class PCDR_LGN(DebiasedRecommender):
         self.alpha = 2. / (1. + np.exp(-10 * self.p)) - 1
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        if config["dataset"] == "ml-1m":
+        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset ml-1m")
-            base_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
+            base_model = torch.load(base_model_file)
             self.user_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.item_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
-        if config["dataset"] == "netflix":
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
+        if config["dataset"] == "netflix" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset netflix")
-            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            base_model = torch.load(base_model_file)
+            self.user_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.item_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-03-27.pth"
+        if config["dataset"] == "amazon-luxury-beauty-18" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset amazon-luxury-beauty-18")
+            base_model = torch.load(base_model_file)
             self.user_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.item_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
