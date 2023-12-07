@@ -154,6 +154,8 @@ class DCCL(DebiasedRecommender):
     def calculate_loss(self, interaction):
         loss = self.forward(interaction)
         return loss
+    def predict(self, interaction):
+        return self.full_sort_predict(interaction)
 
     def full_sort_predict(self, interaction):
         user = interaction[self.USER_ID]
@@ -161,4 +163,3 @@ class DCCL(DebiasedRecommender):
         all_item_e = self.iid_cont_emb_layer.weight
         score = torch.matmul(user_e, all_item_e.transpose(0, 1))
         return score.view(-1)
-

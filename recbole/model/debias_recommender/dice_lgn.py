@@ -55,7 +55,7 @@ class DICE_LGN(DebiasedRecommender):
         self.apply(xavier_normal_initialization)
         if config["dataset"] == "ml-1m":
             print("base on LightGCN")
-            mf_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
+            mf_model = torch.load("saved/LightGCN-Dec-05-2023_20-27-58.pth")
             self.users_int.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
             self.users_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
             self.items_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)

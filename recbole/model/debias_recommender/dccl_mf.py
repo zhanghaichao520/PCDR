@@ -160,6 +160,8 @@ class DCCL_MF(DebiasedRecommender):
     def calculate_loss(self, interaction):
         loss = self.forward(interaction)
         return loss
+    def predict(self, interaction):
+        return self.full_sort_predict(interaction)
 
     def full_sort_predict(self, interaction):
         user = interaction[self.USER_ID]

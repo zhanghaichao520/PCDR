@@ -80,10 +80,16 @@ class PCDR_LGN(DebiasedRecommender):
         # parameters initialization
         self.apply(xavier_normal_initialization)
         if config["dataset"] == "ml-1m":
-            print("base on LightGCN")
+            print("base on LightGCN, dataset ml-1m")
             mf_model = torch.load("saved/LightGCN-Dec-05-2023_22-39-00.pth")
             self.user_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
             self.item_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+        if config["dataset"] == "netflix":
+            print("base on LightGCN, dataset netflix")
+            mf_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            self.user_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
+            self.item_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+
 
         self.Ms_data = []
         self.Mt_data = []

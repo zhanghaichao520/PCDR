@@ -67,7 +67,6 @@ class DICE_MF(DebiasedRecommender):
         return user_emb[user]
 
     def get_item_emb_total(self, item):
-
         item_emb = torch.cat((self.items_int.weight, self.items_pop.weight), 1)
         return item_emb[item]
 
@@ -92,9 +91,9 @@ class DICE_MF(DebiasedRecommender):
 
         return -torch.mean(torch.log(torch.sigmoid(p_score - n_score)))
 
-    def mask_bpr_loss(self, p_score, n_score, mask):
+    def mask_bpr_loss(self, p_score, n_score):
 
-        return -torch.mean(mask * torch.log(torch.sigmoid(p_score - n_score)))
+        return -torch.mean(torch.log(torch.sigmoid(p_score - n_score)))
 
     def forward(self, user, item, factor):
         user_emb = None
@@ -114,7 +113,7 @@ class DICE_MF(DebiasedRecommender):
         user = interaction[self.USER_ID]
         item_p = interaction[self.ITEM_ID]
         item_n = interaction[self.NEG_ITEM_ID]
-        mask = interaction[self.mask_field]
+        # mask = interaction[self.mask_field]
 
         score_p_int = self.forward(user, item_p, 'int')
         score_n_int = self.forward(user, item_n, 'int')
@@ -124,9 +123,8 @@ class DICE_MF(DebiasedRecommender):
         score_p_total = score_p_int + score_p_pop
         score_n_total = score_n_int + score_n_pop
 
-        loss_int = self.mask_bpr_loss(score_p_int, score_n_int, mask)
-        loss_pop = self.mask_bpr_loss(score_n_pop, score_p_pop, mask) + self.mask_bpr_loss(score_p_pop, score_n_pop,
-                                                                                           ~mask)
+        loss_int = self.mask_bpr_loss(score_p_int, score_n_int)
+        loss_pop = self.mask_bpr_loss(score_n_pop, score_p_pop) + self.mask_bpr_loss(score_p_pop, score_n_pop)
         loss_total = self.bpr_loss(score_p_total, score_n_total)
 
         item_all = torch.unique(torch.cat((item_p, item_n)))
