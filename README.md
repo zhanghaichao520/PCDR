@@ -1,3 +1,20 @@
+## Installation
+PCDR works with the following operating systems:
+
+* Linux
+* Windows 10
+* macOS X
+
+PCDR requires Python version 3.7 or later.
+
+PCDR requires torch version 1.7.0 or later. If you want to use PCDR with GPU,
+please ensure that CUDA or cudatoolkit version is 9.2 or later.
+This requires NVIDIA driver version >= 396.26 (for Linux) or >= 397.44 (for Windows10).
+
+### Install 
+```bash
+pip install -e . --verbose
+```
 
 ## Quick-Start
 With the source code, you can use the provided script for initial usage of our library:

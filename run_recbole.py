@@ -14,7 +14,7 @@ from recbole.quick_start import run_recbole, run_recboles
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="PCDR_LGN", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="DICE_LGN", help="name of models")
     parser.add_argument(
         "--dataset", "-d", type=str, default="netflix", help="name of datasets"
     )
