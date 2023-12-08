@@ -1,7 +1,7 @@
 % 数据
 model_names = {'MF', 'BPR', 'MACR', 'DICE', 'PCDR'};
-HR20_popular = [31.4, 34.88, 31.4, 25.58, 32.56];
-HR20_unpopular = [10.23, 10.48, 22.8, 20.07, 29.1];
+HR20_conservatives = [31.4, 34.88, 31.4, 25.58, 32.56];
+HR20_radicals = [10.23, 10.48, 22.8, 20.07, 29.1];
 
 % 设置画布大小和字体大小
 figure('Units', 'inches', 'Position', [0, 0, 5, 4]);
@@ -19,7 +19,7 @@ bar_handle(2).CData = [0.8500 0.3250 0.0980];
 set(gca, 'XTickLabel', model_names, 'FontSize', fontSize);
 ylabel('HR@20', 'FontSize', fontSize);
 %xlabel('Model', 'FontSize', fontSize);
-legend({'Popular items', 'Unpopular items'}, 'FontSize', fontSize);
+legend({'conservatives', 'radicals'}, 'FontSize', fontSize);
 
 % 展示
 grid on;

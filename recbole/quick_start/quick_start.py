@@ -91,7 +91,9 @@ def run_recbole(
 
     # model evaluation
     test_result = trainer.evaluate(
-        test_data, load_best_model=saved, show_progress=config["show_progress"]
+        test_data, load_best_model=saved,
+        model_file=None,
+        show_progress=config["show_progress"]
     )
 
     logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")

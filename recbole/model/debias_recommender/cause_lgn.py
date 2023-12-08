@@ -61,7 +61,7 @@ class CausE_LGN(DebiasedRecommender):
         base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
         if config["dataset"] == "netflix" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset netflix")
-            base_model = torch.load("saved/LightGCN-Dec-06-2023_21-02-08.pth")
+            base_model = torch.load(base_model_file)
             self.user_emb.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.items_emb_control.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
             self.items_emb_treatment.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
