@@ -78,7 +78,7 @@ class DCCL_LGN(DebiasedRecommender):
 
         uids = interaction[self.USER_ID][pos_index]
         iids = interaction[self.ITEM_ID][pos_index]
-        neg_iid_list = interaction[self.ITEM_ID][neg_index]
+        neg_iid_list = interaction[self.ITEM_ID][neg_index].to(self.device)
 
         pop_indices = torch.nonzero(torch.logical_and(interaction["popular"] == 1, interaction["label"] == 1)).squeeze()
         item_pop_list = interaction[self.ITEM_ID][pop_indices]
@@ -128,10 +128,10 @@ class DCCL_LGN(DebiasedRecommender):
         ui_conf_loss = self.CSELoss(ui_conf_score, y_true, mask_item_pop, neg_num=self.neg_num)
 
         rown = user_emb.size(0)
-        r = torch.randint(low=0, high=(neg_iid_list.size(0) - 1), size=(rown,), dtype=torch.int64)
+        r = torch.randint(low=0, high=(neg_iid_list.size(0) - 1), size=(rown,), dtype=torch.int64).to(self.device)
         r = r.view(rown, 1)
         r = r.view(-1)
-        neg_iids = torch.gather(neg_iid_list, 0, r)
+        neg_iids = torch.gather(neg_iid_list, 0, r).to(self.device)
 
         neg_iids = neg_iids.view(rown)
 
