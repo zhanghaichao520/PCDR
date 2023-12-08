@@ -161,13 +161,13 @@ class DCCL_LGN(DebiasedRecommender):
         if (ratio > 1e-5):
             mask = torch.greater(torch.empty([N, N],dtype=torch.float32).uniform_(), ratio)
 
-            mask = torch.logical_or(mask, label)
-            mask = torch.tensor(mask, dtype=torch.float32)
+            mask = torch.logical_or(mask, label).to(self.device)
+            mask = torch.tensor(mask, dtype=torch.float32).to(self.device)
             der_pred = torch.multiply(y_pred, mask)
             der = torch.sum(torch.tensor(der_pred), dim=-1,  keepdim=False) + 1e-1
         else:
             der = torch.sum(y_pred, dim=-1, keepdim=False) + 1e-1
-        loss = -torch.log(torch.div(ner, der) + 1e-12)
+        loss = -torch.log(torch.div(ner, der) + 1e-12).to(self.device)
         if mask is None:
             pass
         else:
