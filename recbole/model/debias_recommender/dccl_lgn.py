@@ -115,7 +115,7 @@ class DCCL_LGN(DebiasedRecommender):
 
         item_pop_1 = torch.reshape(pos_item_pop, [-1, 1])
         item_pop_2 = torch.reshape(pos_item_pop, [1, -1])
-        pop_select = torch.greater_equal(item_pop_1, item_pop_2).float().clone().detach()
+        pop_select = torch.greater_equal(item_pop_1, item_pop_2).float().clone().detach().to(self.device)
         ui_conf_score = torch.matmul(user_conf_emb_norm, torch.transpose(item_pop_emb_norm,0,1)) * pop_select
         ui_conf_score = ui_conf_score * self.score_coeff
 
