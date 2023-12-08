@@ -106,10 +106,10 @@ class DCCL_LGN(DebiasedRecommender):
 
         uid_conf_emb = self.uid_conf_emb_layer(uids)
         uid_int_emb = self.uid_int_emb_layer(uids)
-        user_int_emb_norm = torch.norm(uid_int_emb, p=2, dim=-1)
-        user_conf_emb_norm = torch.norm(uid_conf_emb, p=2, dim=-1)
+        user_int_emb_norm = torch.norm(uid_int_emb, p=2, dim=-1).to(self.device)
+        user_conf_emb_norm = torch.norm(uid_conf_emb, p=2, dim=-1).to(self.device)
 
-        item_pop_emb_norm = item_pop_emb_norm.unsqueeze(0)
+        item_pop_emb_norm = item_pop_emb_norm.unsqueeze(0).to(self.device)
         ui_int_score = torch.matmul(user_int_emb_norm, torch.transpose(item_pop_emb_norm,0,1))
         ui_int_score = ui_int_score * self.score_coeff
 
