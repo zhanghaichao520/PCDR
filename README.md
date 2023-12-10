@@ -22,7 +22,7 @@ pip install ray[tune]
 With the source code, you can use the provided script for initial usage of our library:
 
 ```bash
-python run_recbole.py
+python run.py
 ```
 
 This script will run the PCDR model on the netflix dataset.
@@ -32,29 +32,29 @@ If you want to change the parameters, such as ``learning_rate``, ``embedding_siz
 parameters as you need:
 
 ```bash
-python run_recbole.py --learning_rate=0.0001 --embedding_size=128
+python run.py --learning_rate=0.0001 --embedding_size=128
 ```
 
 If you want to change the models, just run the script by setting additional command parameters:
 
 ```bash
-python run_recbole.py --model=[model_name]
+python run.py --model=[model_name]
 ```
 for example:
 
 ```bash
-python run_recbole.py --model=PCDR
+python run.py --model=PCDR
 ```
 
 If you want to change the dataset, just run the script by setting additional command parameters:
 
 ```bash
-python run_recbole.py --dataset=[dataset_name]
+python run.py --dataset=[dataset_name]
 ```
 for example:
 
 ```bash
-python run_recbole.py --dataset=netflix
+python run.py --dataset=netflix
 ```
 
 ### Download ataset:

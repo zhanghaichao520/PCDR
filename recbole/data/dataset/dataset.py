@@ -1906,7 +1906,10 @@ class Dataset(torch.utils.data.Dataset):
         next_df[2].inverse_sample_item(self.config["data_sample"])
 
         if self.config["testset_sample_method"] is not None:
-            next_df[2].sample_radicals_or_conservations(self.config["testset_sample_method"])
+            delta = 0
+            if self.config["radical_or_conser_delta"] is not None:
+                delta = self.config["radical_or_conser_delta"]
+            next_df[2].sample_radicals_or_conservations(self.config["testset_sample_method"], delta)
 
         next_ds = [self.copy(_) for _ in next_df]
         return next_ds

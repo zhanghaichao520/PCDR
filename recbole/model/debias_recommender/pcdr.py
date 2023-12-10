@@ -32,10 +32,10 @@ class PCDR(DebiasedRecommender):
         super(PCDR, self).__init__(config, dataset)
         # load parameters info
         self.embedding_size = config["embedding_size"]
-        self.weight0 = 1
-        self.weight1 = 0.4
-        self.weight2 = 2
-        self.weight3 = 2
+        self.weight0 = 10
+        self.weight1 = 0.5
+        self.weight2 = 1
+        self.weight3 = 1
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
         self.user_age_embedding = nn.Embedding(self.n_users, self.embedding_size)
@@ -244,10 +244,8 @@ class PCDR(DebiasedRecommender):
         domain_loss = bce_loss(dict["domin_network_Cs"], d1) + bce_loss(dict["domin_network_Ct"], d0) \
                       + bce_loss(dict["domin_network_Ms"], d1) + bce_loss(dict["domin_network_Mt"], d0)
         domain_loss = domain_loss / 4
-        total_loss = (bce_loss1 + bce_loss2 + bce_loss3) * self.weight0 + sim_loss2 * self.weight1 + causal_loss * self.weight2\
-                     + domain_loss * self.weight3
-        # return total_loss
-        return ((bce_loss1 + bce_loss2 + bce_loss3) * self.weight0,  sim_loss2 * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
+
+        return ((bce_loss1 + bce_loss2 + bce_loss3) * self.weight0, (sim_loss1 + sim_loss2) * self.weight1, causal_loss * self.weight2, domain_loss * self.weight3)
 
 
     def predict(self, interaction):

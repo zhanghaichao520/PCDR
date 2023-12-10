@@ -1,7 +1,7 @@
 % 数据
 model_names = {'MF', 'BPR', 'MACR', 'DICE', 'PCDR'};
-HR20_conservatives = [29.83, 29.14, 31.31, 31.81, 29.52]; 
-HR20_radicals      = [19.95, 19.85, 24.81, 24.79, 37.84]; 
+HR20_conservatives = [29.83, 29.14, 31.31, 31.81, 36.47]; 
+HR20_radicals      = [19.95, 19.85, 24.81, 24.79, 33.66]; 
 
 % 设置画布大小和字体大小
 figure('Units', 'inches', 'Position', [0, 0, 5, 4]);
@@ -32,5 +32,5 @@ model_names = {'MF', 'LightGCN', 'MACR', 'DICE', 'PCDR'};
 % 
 % 
 % % group2
-% HR20_conservatives = [29.83, 29.14, 31.31, 31.81, 29.52]; 
-% HR20_radicals      = [19.95, 19.85, 24.81, 24.79, 37.84]; 
+% HR20_conservatives = [29.83, 29.14, 31.31, 31.81, 36.47]; 
+% HR20_radicals      = [19.95, 19.85, 24.81, 24.79, 33.66]; 
