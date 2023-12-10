@@ -40,9 +40,55 @@ If you want to change the models, just run the script by setting additional comm
 ```bash
 python run_recbole.py --model=[model_name]
 ```
+for example:
+
+```bash
+python run_recbole.py --model=PCDR
+```
 
 If you want to change the dataset, just run the script by setting additional command parameters:
 
 ```bash
 python run_recbole.py --dataset=[dataset_name]
 ```
+for example:
+
+```bash
+python run_recbole.py --dataset=netflix
+```
+
+### Download ataset:
+All data sets are stored in the Dataset directory. If not found, please click the link to download, such as
+- [amazon-luxury-beauty-18](https://recbole.s3-accelerate.amazonaws.com/ProcessedDatasets/Amazon_ratings/Amazon2018/Amazon_Luxury_Beauty.zip)
+- [netflix](https://recbole.s3-accelerate.amazonaws.com/ProcessedDatasets/Netflix/netflix.zip)
+- More data set downloads can be found at recbole/properties/dataset/url.yaml
+
+### Dataset usage
+- Place the downloaded data set in the Dataset directory, and create a separate directory named as the data set, such as
+  - dataset/amazon-luxury-beauty-18/amazon-luxury-beauty-18.inter
+  - dataset/amazon-luxury-beauty-18/amazon-luxury-beauty-18.item
+
+- Create a yaml file for the data set and store it in the properties directory. You can refer to other data set yaml files when creating a template, for example
+  - recbole/properties/dataset/amazon-luxury-beauty-18.yaml
+  - recbole/properties/dataset/netflix.yaml
+
+### Drawing code
+
+The directory draw/ stores all the drawing codes of the article
+.m files represents matlab code (main)
+.py files represents python code (same unction)
+
+### Conservative and Radical Statistics
+Add configuration in the data set's yaml file
+eg. recbole/properties/dataset/ml-1m.yaml
+
+obtain radicals performance
+```
+testset_sample_method: radicals
+```
+obtain conservatives performance
+```
+testset_sample_method: conservatives
+```
+
+If neither is written, it means that there is no distinction between the two.

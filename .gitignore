@@ -1,5 +1,5 @@
 # Saved models
-/saved*
+/model_amazon
 *.pth
 
 .vscode/
@@ -7,7 +7,7 @@
 *.pyc
 *.log
 log_tensorboard/*
-saved/
+model_amazon/
 *.lprof
 *.egg-info/
 docs/build/

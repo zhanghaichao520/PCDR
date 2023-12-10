@@ -85,26 +85,19 @@ def run_recbole(
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
     # model training
-    best_valid_score, best_valid_result = trainer.fit(
-        train_data, valid_data, saved=saved, show_progress=config["show_progress"]
-    )
+    # best_valid_score, best_valid_result = trainer.fit(
+    #     train_data, valid_data, saved=saved, show_progress=config["show_progress"]
+    # )
 
     # model evaluation
     test_result = trainer.evaluate(
         test_data, load_best_model=saved,
-        model_file=None,
+        model_file="saved/LightGCN-Dec-10-2023_15-12-35.pth",
         show_progress=config["show_progress"]
     )
 
-    logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
+    # logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
     logger.info(set_color("test result", "yellow") + f": {test_result}")
-
-    return {
-        "best_valid_score": best_valid_score,
-        "valid_score_bigger": config["valid_metric_bigger"],
-        "best_valid_result": best_valid_result,
-        "test_result": test_result,
-    }
 
 
 def run_recboles(rank, *args):

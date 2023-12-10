@@ -15,4 +15,4 @@ train_neg_sample_args:          # (dict) Negative sampling configuration for mod
   alpha: 1.0                    # (float) The power of sampling probability for popularity distribution.
   dynamic: False                # (bool) Whether to use dynamic negative sampling.
   candidate_num: 0              # (int) The number of candidate negative items when dynamic negative sampling.
-data_sample: 0.4
+data_sample: 0.3

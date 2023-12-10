@@ -1,2 +1,3 @@
 embedding_size: 64
-data_sample: 0.5
+#data_sample: 0.6
+data_sample: 0.8

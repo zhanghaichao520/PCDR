@@ -167,6 +167,34 @@ class Interaction(object):
     def __repr__(self):
         return self.__str__()
 
+    def sample_radicals_or_conservations(self, type):
+        # 计算每个用户的radical和conservative数量
+        unique_user_ids = torch.unique(self.interaction['user_id'])
+        user_counts = {user_id.item(): [0, 0] for user_id in unique_user_ids}
+
+        for user_id, popular in zip(self.interaction['user_id'], self.interaction['popular']):
+            user_counts[int(user_id.item())][int(popular.item())] += 1
+
+        final_users = set()
+        if type == "radicals":
+            # 确定radical用户
+            final_users = {user_id for user_id, counts in user_counts.items() if counts[0] > counts[1]}
+        if type == "conservatives":
+            # 确定radical用户
+            final_users = {user_id for user_id, counts in user_counts.items() if counts[0] < counts[1]}
+
+        # 筛选radical用户的记录
+        indices_to_keep = [i for i, user_id in enumerate(self.interaction['user_id']) if
+                            user_id.item() in final_users]
+
+        # 更新self.interaction
+        for key in self.interaction.keys():
+            self.interaction[key] = self.interaction[key][indices_to_keep]
+
+        self.length = -1
+        for k in self.interaction:
+            self.length = max(self.length, self.interaction[k].unsqueeze(-1).shape[0])
+
     def inverse_sample_item(self, radio):
         # 计算 item_id 中每个元素的出现次数
         item_id = self.interaction['item_id']

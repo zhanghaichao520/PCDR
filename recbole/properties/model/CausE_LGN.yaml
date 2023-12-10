@@ -6,4 +6,5 @@ lambda_2: 1
 
 INTERVENE_MASK: popular
 LABEL: label
-data_sample: 0.4
+#data_sample: 0.5
+data_sample: 0.8

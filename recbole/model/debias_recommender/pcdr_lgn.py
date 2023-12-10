@@ -229,7 +229,7 @@ class PCDR_LGN(DebiasedRecommender):
         dict = self.forward(interaction)
 
         bce_loss = nn.BCELoss()
-        bce_loss1  = bce_loss(dict["Y1"], interaction["label"])
+        bce_loss1 = bce_loss(dict["Y1"], interaction["label"])
         bce_loss2 = bce_loss(dict["Y2"], interaction["label"])
         bce_loss3 = bce_loss(dict["Y3"], interaction["label"])
 
