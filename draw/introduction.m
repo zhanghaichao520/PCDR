@@ -1,5 +1,5 @@
 % 数据
-model_names = {'MF', 'BPR', 'MACR', 'DICE', 'PCDR'};
+model_names = {'MF', 'LightGCN', 'MACR', 'DICE', 'PCDR'};
 HR20_conservatives = [29.83, 29.14, 31.31, 31.81, 36.47]; 
 HR20_radicals      = [19.95, 19.85, 24.81, 24.79, 33.66]; 
 

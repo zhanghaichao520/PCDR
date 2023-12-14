@@ -38,14 +38,8 @@ class PCDR(DebiasedRecommender):
         self.weight3 = 1
         # define layers and loss
         self.user_id_embedding = nn.Embedding(self.n_users, self.embedding_size)
-        self.user_age_embedding = nn.Embedding(self.n_users, self.embedding_size)
-        self.user_gender_embedding = nn.Embedding(self.n_users, self.embedding_size)
-        self.user_occupation_embedding = nn.Embedding(self.n_users, self.embedding_size)
 
         self.item_id_embedding = nn.Embedding(self.n_items, self.embedding_size)
-        self.item_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
-        self.item_gender_M_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
-        self.item_gender_F_interacion_num_level_embedding = nn.Embedding(self.n_items, self.embedding_size)
 
         self.loss = BPRLoss()
 
@@ -93,10 +87,6 @@ class PCDR(DebiasedRecommender):
         self.Ct_data = []
     def get_user_embedding(self, interaction):
         id_embedding = self.user_id_embedding(interaction[self.USER_ID])
-        # age_embedding = self.user_age_embedding(interaction["age_level"].to(torch.intself.embedding_size))
-        # gender_embedding = self.user_gender_embedding(interaction["gender"])
-        # occupation_embedding = self.user_occupation_embedding(interaction["occupation"])
-        # return (id_embedding + age_embedding + gender_embedding + occupation_embedding) / 4
         return id_embedding
     def get_user_popular_embedding(self, interaction):
         r"""Get a batch of user embedding tensor according to input user's id.
@@ -144,10 +134,6 @@ class PCDR(DebiasedRecommender):
             torch.FloatTensor: The embedding tensor of a batch of item, shape: [batch_size, embedding_size]
         """
         id_embedding = self.item_id_embedding(interaction[self.ITEM_ID])
-        # interacion_num_level_embedding = self.item_interacion_num_level_embedding(interaction["interaction_num_level"].to(torch.intself.embedding_size))
-        # gender_M_interacion_num_level_embedding = self.item_gender_M_interacion_num_level_embedding(interaction["gender_M_interacion_num_level"].to(torch.intself.embedding_size))
-        # gender_F_interacion_num_level_embedding = self.item_gender_F_interacion_num_level_embedding(interaction["gender_F_interacion_num_level"].to(torch.intself.embedding_size))
-        # return (id_embedding + interacion_num_level_embedding) / 2
         return id_embedding
     def forward(self, interaction):
         dict = {}
