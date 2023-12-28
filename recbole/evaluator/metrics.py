@@ -194,12 +194,39 @@ class Recall(TopkMetric):
 
     def calculate_metric(self, dataobject):
         pos_index, pos_len = self.used_info(dataobject)
-        result = self.metric_info(pos_index, pos_len)
-        metric_dict = self.topk_result("recall", result)
+        metric = "recall"
+        metric_dict = {}
+        for k in self.topk:
+            avg_result = self.metric_info(pos_index, k)
+            key = "{}@{}".format(metric, k)
+            metric_dict[key] = round(avg_result, self.decimal_place)
         return metric_dict
 
-    def metric_info(self, pos_index, pos_len):
-        return np.cumsum(pos_index, axis=1) / pos_len.reshape(-1, 1)
+    def metric_info(self, topk_idx, k):
+        """
+            Calculate the recall rate for a recommendation system at different top-k levels.
+
+            Args:
+            - topk_idx (np.ndarray): A boolean array of shape (num_users, 20) indicating correct (True) or incorrect (False) recommendations.
+            - k (int): The top-k items to consider for each user.
+
+            Returns:
+            - recall_rate (float): The calculated recall rate.
+            """
+
+        topk_idx_topk = topk_idx[:, :k]
+
+        # Calculating the number of correct recommendations
+        correct_recommendations = np.sum(topk_idx_topk)
+
+        # Total possible correct recommendations
+        total_recommendations = topk_idx.size
+
+        # Calculating recall
+        recall = correct_recommendations / total_recommendations
+
+        return recall
+
 
 
 class NDCG(TopkMetric):

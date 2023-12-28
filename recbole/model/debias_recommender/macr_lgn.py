@@ -52,7 +52,7 @@ class MACR_LGN(DebiasedRecommender):
 
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
         if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset ml-1m")
             base_model = torch.load(base_model_file)

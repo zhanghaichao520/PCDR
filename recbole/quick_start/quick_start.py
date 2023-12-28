@@ -92,11 +92,11 @@ def run_recbole(
     # model evaluation
     test_result = trainer.evaluate(
         test_data, load_best_model=saved,
-        # model_file="saved/PCDR-Dec-10-2023_19-13-56.pth",
+        # model_file="saved/LightGCN-Dec-20-2023_15-38-56.pth",
         show_progress=config["show_progress"]
     )
 
-    logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
+    # logger.info(set_color("best valid ", "yellow") + f": {best_valid_result}")
     logger.info(set_color("test result", "yellow") + f": {test_result}")
 
 

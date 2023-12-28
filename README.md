@@ -57,7 +57,7 @@ for example:
 python run.py --dataset=netflix
 ```
 
-### Download ataset:
+### Download Dataset:
 All data sets are stored in the Dataset directory. If not found, please click the link to download, such as
 - [amazon-luxury-beauty-18](https://recbole.s3-accelerate.amazonaws.com/ProcessedDatasets/Amazon_ratings/Amazon2018/Amazon_Luxury_Beauty.zip)
 - [netflix](https://recbole.s3-accelerate.amazonaws.com/ProcessedDatasets/Netflix/netflix.zip)

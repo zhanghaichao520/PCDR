@@ -2,6 +2,7 @@
 # @Time   : 2023/4/27
 # @Author : Haichao Zhang
 # @Email  : Haichao.Zhang22@student.xjtlu.edu.cn
+import os
 
 import torch
 import torch.nn as nn
@@ -38,11 +39,14 @@ class DCCL_MF(DebiasedRecommender):
 
         self.apply(xavier_normal_initialization)
         # init emebedding weight with MF model
-        mf_model = torch.load("saved/MF-Dec-05-2023_18-40-45.pth")
-        self.uid_int_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-        self.uid_conf_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-        self.iid_pop_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
-        self.iid_cont_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+        base_model_file = "saved/MF-Dec-20-2023_15-38-44.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-1m")
+            mf_model = torch.load(base_model_file)
+            self.uid_int_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
+            self.uid_conf_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
+            self.iid_pop_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+            self.iid_cont_emb_layer.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
 
 
     def pop_func(self, pop_tensor, pop_coeff):

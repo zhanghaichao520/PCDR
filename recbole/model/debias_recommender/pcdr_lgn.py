@@ -80,7 +80,7 @@ class PCDR_LGN(DebiasedRecommender):
         self.alpha = 2. / (1. + np.exp(-10 * self.p)) - 1
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        base_model_file = "saved/LightGCN-Dec-05-2023_22-39-00.pth"
+        base_model_file = "saved/LightGCN-Dec-20-2023_15-38-56.pth"
         if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
             print("base on LightGCN, dataset ml-1m")
             base_model = torch.load(base_model_file)
@@ -266,8 +266,12 @@ class PCDR_LGN(DebiasedRecommender):
 
         Ms = self.matching_network(user_popular_embedding)
         Mt = self.matching_network(user_unpopular_embedding)
+        Cs = self.conformity_network(user_popular_embedding)
+        Ct = self.conformity_network(user_unpopular_embedding)
 
         Y1 = torch.matmul(((Yd * Ms) + (1 - Yd) * Mt), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y2 = torch.matmul(((Yd * Cs) + (1 - Yd) * Ct), all_item_e.transpose(0, 1))  # [user_num,item_num]
+        Y3 = torch.matmul(((Yd * (Ms + Cs)) + (1 - Yd) * (Mt + Ct)), all_item_e.transpose(0, 1))  # [user_num,item_num]
 
         return Y1.view(-1)
 

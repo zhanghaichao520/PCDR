@@ -1,3 +1,4 @@
 embedding_size: 64
 #data_sample: 0.6
-data_sample: 0.8
+#data_sample: 0.8
+data_sample: 0.4 #ML_1L

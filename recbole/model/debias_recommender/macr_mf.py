@@ -9,6 +9,7 @@ MACR
 Reference:
     Tianxin Wei et al, "Model-Agnostic Counterfactual Reasoning for Eliminating Popularity Bias in Recommender System"
 """
+import os
 
 import torch
 import torch.nn as nn
@@ -51,10 +52,12 @@ class MACR_MF(DebiasedRecommender):
 
         # parameters initialization
         self.apply(xavier_normal_initialization)
-        if config["dataset"] == "ml-1m":
-            mf_model = torch.load("saved/MF-Dec-05-2023_18-40-45.pth")
-            self.user_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
-            self.item_id_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
+        base_model_file = "saved/MF-Dec-20-2023_15-38-44.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-1m")
+            mf_model = torch.load(base_model_file)
+            self.user_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
+            self.item_embedding.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)
 
     def get_user_embedding(self, user):
         r""" Get a batch of user embedding tensor according to input user's id.

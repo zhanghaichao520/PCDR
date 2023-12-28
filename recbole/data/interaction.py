@@ -167,7 +167,7 @@ class Interaction(object):
     def __repr__(self):
         return self.__str__()
 
-    def sample_radicals_or_conservations(self, type, delta=0):
+    def sample_radicals_or_conservations(self, type, min_limit, max_limit, delta=0):
         # 计算每个用户的radical和conservative数量
         unique_user_ids = torch.unique(self.interaction['user_id'])
         user_counts = {user_id.item(): [0, 0] for user_id in unique_user_ids}
@@ -176,13 +176,16 @@ class Interaction(object):
             user_counts[int(user_id.item())][int(popular.item())] += 1
 
         final_users = set()
-
+        print(f"test sample type: {type}")
         if type == "radicals":
             # 确定radical用户
             final_users = {user_id for user_id, counts in user_counts.items() if counts[0] + delta > counts[1]}
         if type == "conservatives":
             # 确定radical用户
             final_users = {user_id for user_id, counts in user_counts.items() if counts[0] + delta < counts[1]}
+        if type == "group":
+            final_users = {user_id for user_id, counts in user_counts.items()
+                           if counts[0] + counts[1] <= max_limit and counts[0] + counts[1] > min_limit}
 
         # 筛选radical用户的记录
         indices_to_keep = [i for i, user_id in enumerate(self.interaction['user_id']) if

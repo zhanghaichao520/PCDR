@@ -58,4 +58,7 @@ interaction_level: 10
 load_inter_data_limit: ~
 
 #testset_sample_method: radicals
-testset_sample_method: conservatives  # conservatives
+#testset_sample_method: conservatives  # conservatives
+#testset_sample_method: group
+#testset_inter_limit_min: 150
+#testset_inter_limit_max: 500

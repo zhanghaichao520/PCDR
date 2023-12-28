@@ -1,4 +1,5 @@
 embedding_size: 64
 eta: 1000
 pscore_method: 'item'  # 'item', 'user', 'nb'
-data_sample: 0.5
+#data_sample: 0.5
+data_sample: 0.4  # ML-1M

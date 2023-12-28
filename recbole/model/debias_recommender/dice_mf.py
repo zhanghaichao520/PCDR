@@ -9,6 +9,7 @@ DICE
 Reference:
     Yu Zheng et al. "Disentangling User Interest and Conformity for Recommendation with Causal Embedding" in WWW 2021
 """
+import os
 
 import torch
 import torch.nn as nn
@@ -54,8 +55,10 @@ class DICE_MF(DebiasedRecommender):
         # parameters initialization
         self.apply(xavier_normal_initialization)
         # init emebedding weight with MF model
-        if config["dataset"] == "ml-1m":
-            mf_model = torch.load("saved/MF-Dec-05-2023_18-40-45.pth")
+        base_model_file = "saved/MF-Dec-20-2023_15-38-44.pth"
+        if config["dataset"] == "ml-1m" and os.path.exists(base_model_file):
+            print("base on MF, dataset ml-1m")
+            mf_model = torch.load(base_model_file)
             self.users_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
             self.users_int.weight = torch.nn.Parameter(mf_model["state_dict"]["user_embedding.weight"].data)
             self.items_pop.weight = torch.nn.Parameter(mf_model["state_dict"]["item_embedding.weight"].data)

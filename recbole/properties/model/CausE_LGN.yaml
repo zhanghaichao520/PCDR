@@ -7,4 +7,5 @@ lambda_2: 1
 INTERVENE_MASK: popular
 LABEL: label
 #data_sample: 0.5
-data_sample: 0.8
+#data_sample: 0.8
+data_sample: 0.8 # ML-1M

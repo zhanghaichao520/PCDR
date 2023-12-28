@@ -53,3 +53,7 @@ normalize_all: True            # (bool) Whether or not to normalize all the floa
 # 按照交互次数设置等级
 interaction_level: 10
 load_inter_data_limit: ~
+
+#testset_sample_method: group
+#testset_inter_limit_min: 0  # conservatives
+#testset_inter_limit_max: 4  # conservatives

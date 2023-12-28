@@ -1904,12 +1904,16 @@ class Dataset(torch.utils.data.Dataset):
         next_df = [self.inter_feat[index] for index in next_index]
         # test set unbias sample
         next_df[2].inverse_sample_item(self.config["data_sample"])
+        ori_testset_len = len(next_df[2])
 
         if self.config["testset_sample_method"] is not None:
             delta = 0
             if self.config["radical_or_conser_delta"] is not None:
                 delta = self.config["radical_or_conser_delta"]
-            next_df[2].sample_radicals_or_conservations(self.config["testset_sample_method"], delta)
+            next_df[2].sample_radicals_or_conservations(self.config["testset_sample_method"], self.config["testset_inter_limit_min"],
+                                                        self.config["testset_inter_limit_max"], delta)
+            sample_testset_len = len(next_df[2])
+            print(f"testset sample rate {sample_testset_len * 100 / ori_testset_len}%")
 
         next_ds = [self.copy(_) for _ in next_df]
         return next_ds
