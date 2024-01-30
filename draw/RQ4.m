@@ -10,13 +10,12 @@ hit20_delta = [0.1865, 0.1396, 0.2124, 0.2853, 0.2372, 0.2139, 0.2532, 0.2336, 0
 figure('Units', 'inches', 'Position', [0, 0, 36, 8]);  % Increased width for more spacing
 lineWidth = 2;
 fontSize = 16;
-lineColor = 'r';
+lineColor = [0.9, 0.4, 0.4];
 
 % Plot the first graph
 subplot(1,3,1);
 plot(alpha, hit20_alpha, '-o', 'LineWidth', lineWidth, 'Color', lineColor);
-alpha = char(945)
-title(alpha, 'FontSize', fontSize);
+title('Causal Loss Param (\alpha)', 'FontSize', fontSize);
 ylabel('Hit@20', 'FontSize', fontSize);
 grid on;
 set(gca, 'FontSize', fontSize);
@@ -24,7 +23,7 @@ set(gca, 'FontSize', fontSize);
 % Plot the second graph
 subplot(1,3,2);
 plot(beta, hit20_beta, '-s', 'LineWidth', lineWidth, 'Color', lineColor);
-title('Similar Loss Param', 'FontSize', fontSize);
+title('Similar Loss Param (\beta)', 'FontSize', fontSize);
 ylabel('Hit@20', 'FontSize', fontSize);  % Added back
 grid on;
 set(gca, 'FontSize', fontSize);
@@ -32,7 +31,7 @@ set(gca, 'FontSize', fontSize);
 % Plot the third graph
 subplot(1,3,3);
 plot(delta, hit20_delta, '-^', 'LineWidth', lineWidth, 'Color', lineColor);
-title('Domain Loss Param', 'FontSize', fontSize);
+title('Domain Loss Param (\delta)', 'FontSize', fontSize);
 ylabel('Hit@20', 'FontSize', fontSize);  % Added back
 grid on;
 set(gca, 'FontSize', fontSize);

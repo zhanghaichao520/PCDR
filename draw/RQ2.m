@@ -12,38 +12,49 @@ amazon_HR20M = [1.92, 2.82, 2.98, 3.64, 2.57];
 amazon_HR20C = [0.49, 0.91, 1.54, 2.12, 2.57];
 amazon_HR20MC = [1.06, 2.20, 2.79, 3.34, 1.80];
 
+% ... [之前的数据定义部分不变] ...
+
 % 创建子图
 figure('Units', 'inches', 'Position', [0, 0, 8, 8]);
 
 % 设置字体和线条大小
 lineWidth = 3;
-fontSizeLarge = 18;
-fontSizeSmall = 16;
+fontSizeLarge = 20;  % 增大标题字体大小
+fontSizeSmall = 18;  % 增大标签和图例的字体大小
 
-% 存储句柄
-handles = zeros(1, 3);
+% 定义柔和的颜色
+softBlue = [0.3, 0.6, 0.9];
+softRed = [0.9, 0.4, 0.4];
+softGreen = [0.4, 0.8, 0.4];
 
-subplot(1,2,1);  % 第一个子图
-h1 = plot(1:5, ml_1m_HR20M, '-o', 1:5, ml_1m_HR20C, '-s', 1:5, ml_1m_HR20MC, '-^', 'LineWidth', lineWidth);
-handles(1:3) = h1;
-title('ml-1m', 'FontSize', fontSizeLarge);
+% 第一个子图: ML-1M
+subplot(1,2,1);
+h1 = plot(1:5, ml_1m_HR20M, '-o', 'Color', softBlue, 'LineWidth', lineWidth);
+hold on;
+h2 = plot(1:5, ml_1m_HR20C, '-s', 'Color', softRed, 'LineWidth', lineWidth);
+h3 = plot(1:5, ml_1m_HR20MC, '-^', 'Color', softGreen, 'LineWidth', lineWidth);
+title('ML-1M', 'FontSize', fontSizeLarge);
 xlabel('Interactions Range', 'FontSize', fontSizeSmall);
 ylabel('HR@20', 'FontSize', fontSizeSmall);
 set(gca, 'XTick', 1:5, 'XTickLabel', ml_1m_range, 'FontSize', fontSizeSmall);
 yyaxis right;
-bar(1:5, ml_1m_percentage, 0.2, 'FaceColor', [0.2 0.2 0.2], 'EdgeColor', 'none', 'FaceAlpha', 0.5);  % ml-1m 子图
+bar(1:5, ml_1m_percentage, 0.2, 'FaceColor', [0.7 0.7 0.7], 'EdgeColor', 'none', 'FaceAlpha', 0.5);
 ylabel('Percentage of Data (%)', 'FontSize', fontSizeSmall);
+legend([h1 h2 h3], 'HR@20 Int', 'HR@20 Conf', 'HR@20 Int+Conf', 'FontSize', fontSizeSmall);
+hold off;
 
-subplot(1,2,2);  % 第二个子图
-plot(1:5, amazon_HR20M, '-o', 1:5, amazon_HR20C, '-s', 1:5, amazon_HR20MC, '-^', 'LineWidth', lineWidth);
-title('amazon', 'FontSize', fontSizeLarge);
+% 第二个子图: Amazon
+subplot(1,2,2);
+h4 = plot(1:5, amazon_HR20M, '-o', 'Color', softBlue, 'LineWidth', lineWidth);
+hold on;
+h5 = plot(1:5, amazon_HR20C, '-s', 'Color', softRed, 'LineWidth', lineWidth);
+h6 = plot(1:5, amazon_HR20MC, '-^', 'Color', softGreen, 'LineWidth', lineWidth);
+title('Amazon', 'FontSize', fontSizeLarge);
 xlabel('Interactions Range', 'FontSize', fontSizeSmall);
 ylabel('HR@20', 'FontSize', fontSizeSmall);
 set(gca, 'XTick', 1:5, 'XTickLabel', amazon_range, 'FontSize', fontSizeSmall);
 yyaxis right;
-bar(1:5, amazon_percentage, 0.2, 'FaceColor', [0.2 0.2 0.2], 'EdgeColor', 'none', 'FaceAlpha', 0.5);  % amazon 子图
+bar(1:5, amazon_percentage, 0.2, 'FaceColor', [0.7 0.7 0.7], 'EdgeColor', 'none', 'FaceAlpha', 0.5);
 ylabel('Percentage of Data (%)', 'FontSize', fontSizeSmall);
-
-% 创建全局图例
-figureLegend = legend(handles(1:3), 'HR@20 Int', 'HR@20 Conf', 'HR@20 Int+Conf', 'FontSize', fontSizeSmall);
-set(figureLegend, 'Position', [0.4, 0.01, 0, 0], 'Units', 'normalized');
+legend([h4 h5 h6], 'HR@20 Int', 'HR@20 Conf', 'HR@20 Int+Conf', 'FontSize', fontSizeSmall);
+hold off;
