@@ -65,5 +65,5 @@ plt.legend(prop = {'size':7})
 
 plt.subplots_adjust(left=0.07, bottom=None, right=0.97, top=None,
                 wspace=0.25, hspace=0.35)
-plt.savefig('/Users/hebert/Desktop/ablation.svg', format='svg')
+# plt.savefig('/Users/hebert/Desktop/ablation.svg', format='svg')
 plt.show()
