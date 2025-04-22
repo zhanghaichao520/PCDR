@@ -100,7 +100,7 @@ Open PCDR/hyper.test and set several hyperparameters to auto-searching in parame
 - **choice**: indicates that the parameter takes discrete values from the setting list.
 Here is an example for hyper.test:
 
-```
+```bash
 learning_rate loguniform -8, 0
 embedding_size choice [64, 96 , 128]
 train_batch_size choice [512, 1024, 2048]
@@ -117,7 +117,7 @@ Note that --config_files=test.yaml is optional, if you don't have any customize 
 
 This processing maybe take a long time to output best hyperparameter and result:
 
-```
+```bash
 running parameters:                                                                                                                    
 {'embedding_size': 64, 'learning_rate': 0.005947474154838498, 'mlp_hidden_size': '[64,64,64]', 'train_batch_size': 512}                
   0%|                                                                                           | 0/18 [00:00<?, ?trial/s, best loss=?]
