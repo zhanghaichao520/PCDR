@@ -92,3 +92,33 @@ testset_sample_method: conservatives
 ```
 
 If neither is written, it means that there is no distinction between the two.
+
+
+### Auto-tuning Hyperparameter
+Open PCDR/hyper.test and set several hyperparameters to auto-searching in parameter list. The following has two ways to search best hyperparameter:
+- **loguniform**: indicates that the parameters obey the uniform distribution, randomly taking values from e^{-8} to e^{0}.
+- **choice**: indicates that the parameter takes discrete values from the setting list.
+Here is an example for hyper.test:
+
+```
+learning_rate loguniform -8, 0
+embedding_size choice [64, 96 , 128]
+train_batch_size choice [512, 1024, 2048]
+mlp_hidden_size choice ['[64, 64, 64]','[128, 128]']
+```
+
+Set training command parameters as you need to run:
+```bash
+python run_hyper.py --model=PCDR --dataset=[data_name] --config_files=xxxx.yaml --params_file=hyper.test
+e.g.
+python run_hyper.py --model=PCDR --dataset=ml-100k --config_files=test.yaml --params_file=hyper.test
+```
+Note that --config_files=test.yaml is optional, if you don't have any customize config settings, this parameter can be empty.
+
+This processing maybe take a long time to output best hyperparameter and result:
+
+```
+running parameters:                                                                                                                    
+{'embedding_size': 64, 'learning_rate': 0.005947474154838498, 'mlp_hidden_size': '[64,64,64]', 'train_batch_size': 512}                
+  0%|                                                                                           | 0/18 [00:00<?, ?trial/s, best loss=?]
+```

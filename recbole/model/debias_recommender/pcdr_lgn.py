@@ -86,6 +86,12 @@ class PCDR_LGN(DebiasedRecommender):
             base_model = torch.load(base_model_file)
             self.user_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
             self.item_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
+        base_model_file = "saved/LightGCN-Apr-22-2025_00-56-11.pth"
+        if config["dataset"] == "ml-100k" and os.path.exists(base_model_file):
+            print("base on LightGCN, dataset ml-100k")
+            base_model = torch.load(base_model_file)
+            self.user_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["user_embedding.weight"].data)
+            self.item_id_embedding.weight = torch.nn.Parameter(base_model["state_dict"]["item_embedding.weight"].data)
 
         base_model_file = "saved/LightGCN-Dec-08-2023_02-50-38.pth"
         if config["dataset"] == "netflix" and os.path.exists(base_model_file):
@@ -233,7 +239,7 @@ class PCDR_LGN(DebiasedRecommender):
         bce_loss2 = bce_loss(dict["Y2"], interaction["label"])
         bce_loss3 = bce_loss(dict["Y3"], interaction["label"])
 
-        gm = 0.5
+        gm = 0.1
         sim_loss1 = torch.exp(dict["Ms_Mt_simliar"] / gm)
         sim_loss1 = sim_loss1.sum(dim = 0) / len(interaction)
         sim_loss1 = 1 / sim_loss1

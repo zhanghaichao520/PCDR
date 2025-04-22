@@ -141,7 +141,70 @@ def load_split_dataloaders(config):
     return train_data, valid_data, test_data
 
 
-def data_preparation(config, dataset):
+import random
+def introduce_label_noise(dataset, noise_ratio=0):
+    """向训练数据中引入标签噪声
+
+    Args:
+        dataset: 训练数据加载器
+        noise_ratio: 噪声比例，默认为5%
+
+    Returns:
+        添加了噪声的训练数据加载器
+    """
+    if noise_ratio == 0:
+        return dataset
+    logger = getLogger()
+    logger.info(f"正在引入 {noise_ratio * 100}% 的标签噪声...")
+
+    inter_feat = dataset.inter_feat
+
+    # 获取交互数据的副本
+    interaction_data = inter_feat.interaction
+
+    # 获取用户和物品字段名
+    uid_field = dataset.uid_field
+    iid_field = dataset.iid_field
+
+    # 获取数据集中所有存在的用户ID和物品ID
+    all_uids = torch.unique(interaction_data[uid_field])
+    all_iids = torch.unique(interaction_data[iid_field])
+
+    # 计算需要替换的样本数量
+    total_samples = len(interaction_data[uid_field])
+    logger.info(f"共有 {total_samples} 个交互记录")
+    num_to_replace = int(total_samples * noise_ratio)
+
+    # 随机选择要替换的样本索引
+    if num_to_replace > 0:
+        replace_indices = torch.randperm(total_samples)[:num_to_replace]
+
+        # 随机决定是替换用户还是物品
+        for idx in replace_indices:
+            if random.random() < 0.5:  # 50%概率替换用户
+                # 从数据集中已存在的用户ID中随机选择一个不同的用户ID
+                original_uid = interaction_data[uid_field][idx]
+                valid_uids = all_uids[all_uids != original_uid]
+                if len(valid_uids) > 0:
+                    new_uid = valid_uids[torch.randint(0, len(valid_uids), (1,))]
+                    interaction_data[uid_field][idx] = new_uid
+            else:  # 50%概率替换物品
+                # 从数据集中已存在的物品ID中随机选择一个不同的物品ID
+                original_iid = interaction_data[iid_field][idx]
+                valid_iids = all_iids[all_iids != original_iid]
+                if len(valid_iids) > 0:
+                    new_iid = valid_iids[torch.randint(0, len(valid_iids), (1,))]
+                    interaction_data[iid_field][idx] = new_iid
+
+        logger.info(f"已随机替换 {num_to_replace} 个交互记录中的用户或物品ID")
+
+    # 更新数据集的交互特征
+    dataset.inter_feat.interaction = interaction_data
+
+    return dataset
+
+
+def data_preparation(config, dataset, noise_ratio=0.0):
     """Split the dataset by :attr:`config['eval_args']` and create training, validation and test dataloader.
 
     Note:
@@ -165,6 +228,9 @@ def data_preparation(config, dataset):
         built_datasets = dataset.build()
 
         train_dataset, valid_dataset, test_dataset = built_datasets
+        # 引入标签噪声（5%）
+        train_dataset = introduce_label_noise(train_dataset, noise_ratio=0.2)
+        built_datasets[0] = train_dataset
         train_sampler, valid_sampler, test_sampler = create_samplers(
             config, dataset, built_datasets
         )

@@ -16,7 +16,6 @@ from logging import getLogger
 
 import sys
 
-
 import pickle
 from ray import tune
 
@@ -36,10 +35,16 @@ from recbole.utils import (
     set_color,
     get_flops,
 )
+import random
+import numpy as np
+import torch
+
+
+
 
 
 def run_recbole(
-    model=None, dataset=None, config_file_list=None, config_dict=None, saved=True
+        model=None, dataset=None, config_file_list=None, config_dict=None, saved=True, noise_rate=0.0
 ):
     r"""A fast running api, which includes the complete process of
     training and testing a model on a specified dataset
@@ -64,13 +69,14 @@ def run_recbole(
     logger = getLogger()
     logger.info(sys.argv)
     logger.info(config)
+    logger.info(f"噪声比例{noise_rate}")
 
     # dataset filtering
     dataset = create_dataset(config)
     logger.info(dataset)
 
     # dataset splitting
-    train_data, valid_data, test_data = data_preparation(config, dataset)
+    train_data, valid_data, test_data = data_preparation(config, dataset, noise_rate)
 
     # model loading and initialization
     init_seed(config["seed"] + config["local_rank"], config["reproducibility"])

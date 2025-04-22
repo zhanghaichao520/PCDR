@@ -14,9 +14,9 @@ from recbole.quick_start import run_recbole, run_recboles
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", "-m", type=str, default="BPR", help="name of models")
+    parser.add_argument("--model", "-m", type=str, default="MACR", help="name of models")
     parser.add_argument(
-        "--dataset", "-d", type=str, default="ml-1m", help="name of datasets"
+        "--dataset", "-d", type=str, default="ml-100k", help="name of datasets"
     )
     parser.add_argument("--config_files", type=str, default=None, help="config files")
     parser.add_argument(
@@ -37,6 +37,12 @@ if __name__ == "__main__":
         default=0,
         help="the global rank offset of this group",
     )
+    parser.add_argument(
+        "--noise_ratio",
+        type=float,
+        default=0,
+        help="noise rate",
+    )
 
     args, _ = parser.parse_known_args()
 
@@ -46,7 +52,8 @@ if __name__ == "__main__":
 
     if args.nproc == 1 and args.world_size <= 0:
         run_recbole(
-            model=args.model, dataset=args.dataset, config_file_list=config_file_list
+            model=args.model, dataset=args.dataset, config_file_list=config_file_list,
+            noise_rate=args.noise_ratio
         )
     else:
         if args.world_size == -1:

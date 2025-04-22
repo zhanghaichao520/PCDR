@@ -213,7 +213,7 @@ class PCDR(DebiasedRecommender):
         bce_loss2 = bce_loss(dict["Y2"], interaction["label"])
         bce_loss3 = bce_loss(dict["Y3"], interaction["label"])
 
-        gm = 0.5
+        gm = 0.1
         sim_loss1 = torch.exp(dict["Ms_Mt_simliar"] / gm)
         sim_loss1 = sim_loss1.sum(dim = 0) / len(interaction)
         sim_loss1 = 1/sim_loss1
