@@ -32,8 +32,12 @@ class PCDR_LGN(DebiasedRecommender):
         super(PCDR_LGN, self).__init__(config, dataset)
         # load parameters info
         self.embedding_size = 64
-        self.weight0 = 1
-        self.weight1 = 0.5
+        self.weight0 = 2 # ML-1M
+        # self.weight0 = 3 # Amazon-luxury-beauty-18
+        # self.weight0 = 1 # Netflix
+        self.weight1 = 0.5 # ML-1M
+        # self.weight1 = 1 # Amazon-luxury-beauty-18
+        # self.weight1 = 0.3 # Netflix
         self.weight2 = 2
         self.weight3 = 2
         # define layers and loss
